@@ -1,17 +1,17 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-enum Vec3Type {
+pub enum Vec3Type {
     Point,
     Vector,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vec3 {
-    x: f32,
-    y: f32,
-    z: f32,
-    t: Vec3Type,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub t: Vec3Type,
 }
 
 pub trait Vec3Coordinate {
