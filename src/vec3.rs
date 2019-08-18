@@ -48,6 +48,28 @@ impl Vec3 {
             t: Vec3Type::Vector,
         }
     }
+    pub fn magnitude(&self) -> f32 {
+        assert_eq!(self.t, Vec3Type::Vector, "Cannot call magnitude method on Point type");
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+    pub fn normalize(&self) -> Self {
+        assert_eq!(self.t, Vec3Type::Vector, "Cannot call normalize method on Point type");
+        let m = self.magnitude();
+        Self {
+            x: self.x / m,
+            y: self.y / m,
+            z: self.z / m,
+            t: self.t,
+        }
+    }
+    pub fn dot(&self, other: Self) -> f32 {
+        assert_eq!(self.t, Vec3Type::Vector, "Cannot call dot product on two point types");
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+    pub fn cross(&self, other: Self) -> Self {
+        assert_eq!(self.t, Vec3Type::Vector, "Cannot call cross product on two point types");
+        Vec3::vector(self.y*other.z - self.z*other.y, self.z*other.x - self.x*other.z, self.x*other.y - self.y*other.x)
+    }
 }
 
 // operator overloading
@@ -220,5 +242,39 @@ mod tests {
         let v1 = Vec3::vector(2, 4, 8);
         let v2 = v1 / 2.0;
         assert_eq!(v2, Vec3::vector(1, 2, 4));
+    }
+    #[test]
+    fn magnitude_of_vector() {
+        let v1 = Vec3::vector(1, 0, 0);
+        assert_eq!(1.0, v1.magnitude());
+        let v2 = Vec3::vector(1, 2, 3);
+        let v3 = Vec3::vector(-1, -2, -3);
+        assert_eq!(v2.magnitude(), v3.magnitude());
+    }
+    #[test]
+    fn normalize_vector() {
+        let v1 = Vec3::vector(4, 0, 0);
+        let v2 = v1.normalize();
+        assert_eq!(v2, Vec3::vector(1, 0, 0));
+
+        let v = Vec3::vector(1, 2, 3);
+        let uv = v.normalize();
+
+        assert!((1.0 - uv.magnitude()).abs() < 0.00001);
+    }
+    #[test]
+    fn dot_product() {
+        let v1 = Vec3::vector(1, 2, 3);
+        let v2 = Vec3::vector(2, 3, 4);
+        assert_eq!(20.0, v1.dot(v2));
+    }
+    #[test]
+    fn cross_product() {
+        let v1 = Vec3::vector(1, 2, 3);
+        let v2 = Vec3::vector(2, 3, 4);
+        let v3 = Vec3::vector(-1, 2, -1);
+        let v4 = Vec3::vector(1, -2, 1);
+        assert_eq!(v3, v1.cross(v2));
+        assert_eq!(v4, v2.cross(v1));
     }
 }
