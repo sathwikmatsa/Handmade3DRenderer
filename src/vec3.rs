@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, Neg};
+use std::ops::{Add, Sub, Neg, Mul, Div};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Vec3Type {
@@ -118,6 +118,64 @@ impl Neg for Vec3 {
     }
 }
 
+impl Mul<f32> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self {
+        Self {
+            x: self.x * rhs.value(),
+            y: self.y * rhs.value(),
+            z: self.z * rhs.value(),
+            t: self.t,
+        }
+    }
+}
+
+impl Mul<i32> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, rhs: i32) -> Self {
+        Self {
+            x: self.x * rhs.value(),
+            y: self.y * rhs.value(),
+            z: self.z * rhs.value(),
+            t: self.t,
+        }
+    }
+}
+
+impl Div<f32> for Vec3 {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self {
+        if rhs.value() == 0.0 {
+            panic!("Cannot divide by zero-valued `scalar`!");
+        }
+        Self {
+            x: self.x / rhs.value(),
+            y: self.y / rhs.value(),
+            z: self.z / rhs.value(),
+            t: self.t,
+        }
+    }
+}
+
+impl Div<i32> for Vec3 {
+    type Output = Self;
+
+    fn div(self, rhs: i32) -> Self {
+        if rhs.value() == 0.0 {
+            panic!("Cannot divide by zero-valued `scalar`!");
+        }
+        Self {
+            x: self.x / rhs.value(),
+            y: self.y / rhs.value(),
+            z: self.z / rhs.value(),
+            t: self.t,
+        }
+    }
+}
+
 // unit tests
 #[cfg(test)]
 mod tests {
@@ -149,5 +207,18 @@ mod tests {
         let v1 = Vec3::vector(1, 2, 3);
         let v2 = -v1;
         assert_eq!(v2, Vec3::vector(-1, -2, -3));
+    }
+    #[test]
+    fn multiplying_with_scalar() {
+        let v1 = Vec3::vector(1, 2, 3);
+        let v2 = v1 * 3.0;
+        assert_eq!(v2, Vec3::vector(3, 6, 9));
+    }
+
+    #[test]
+    fn dividing_by_scalar() {
+        let v1 = Vec3::vector(2, 4, 8);
+        let v2 = v1 / 2.0;
+        assert_eq!(v2, Vec3::vector(1, 2, 4));
     }
 }
