@@ -25,6 +25,9 @@ impl Canvas {
             grid: Self::make_grid(w, h),
         }
     }
+    pub fn write_pixel(&mut self, i: u32, j: u32, color: Color) {
+        self.grid[i as usize][j as usize] = color;
+    }
 }
 
 #[cfg(test)]
@@ -41,5 +44,12 @@ mod tests {
                 assert_eq!(*pixel, p);
             }
         }
+    }
+    #[test]
+    fn write_pixel_in_canvas() {
+        let mut c = Canvas::new(5, 5);
+        let pix = Color::new(1.0, 1.0, 1.0);
+        c.write_pixel(1, 1, pix);
+        assert_eq!(c.grid[1usize][1usize], pix);
     }
 }
