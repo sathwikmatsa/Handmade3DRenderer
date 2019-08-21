@@ -1,13 +1,12 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
 use super::float_cmp;
 
-trait PartialEq {
-    fn eq(self, other: Self) -> bool;
-}
-
-impl PartialEq for f32 {
-    fn eq(self, other: Self) -> bool {
-        float_cmp::equal(self, other)
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        float_cmp::equal(self.x, other.x) &&
+        float_cmp::equal(self.y, other.y) &&
+        float_cmp::equal(self.z, other.z) &&
+        self.t == other.t
     }
 }
 
@@ -17,7 +16,7 @@ pub enum Vec3Type {
     Vector,
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -271,13 +270,13 @@ mod tests {
         let v = Vec3::vector(1, 2, 3);
         let uv = v.normalize();
 
-        assert!((1.0 - uv.magnitude()).abs() < 0.00001);
+        assert!(float_cmp::equal(1.0, uv.magnitude()));
     }
     #[test]
     fn dot_product() {
         let v1 = Vec3::vector(1, 2, 3);
         let v2 = Vec3::vector(2, 3, 4);
-        assert_eq!(20.0, v1.dot(v2));
+        assert!(float_cmp::equal(20.0, v1.dot(v2)));
     }
     #[test]
     fn cross_product() {
@@ -292,6 +291,6 @@ mod tests {
     fn compare_f32() {
         let i = 0.00001;
         let j = 0.00001;
-        assert_eq!(i, j);
+        assert_eq!(true, float_cmp::equal(i, j));
     }
 }
