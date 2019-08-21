@@ -1,4 +1,15 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
+use super::float_cmp;
+
+trait PartialEq {
+    fn eq(self, other: Self) -> bool;
+}
+
+impl PartialEq for f32 {
+    fn eq(self, other: Self) -> bool {
+        float_cmp::equal(self, other)
+    }
+}
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Vec3Type {
@@ -276,5 +287,11 @@ mod tests {
         let v4 = Vec3::vector(1, -2, 1);
         assert_eq!(v3, v1.cross(v2));
         assert_eq!(v4, v2.cross(v1));
+    }
+    #[test]
+    fn compare_f32() {
+        let i = 0.00001;
+        let j = 0.00001;
+        assert_eq!(i, j);
     }
 }

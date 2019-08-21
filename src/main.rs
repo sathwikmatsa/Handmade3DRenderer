@@ -29,7 +29,9 @@ fn main() {
     let color = Color::new(1.0, 1.0, 1.0);
 
     while p.position.y > 0.0 {
-        canvas.write_pixel(p.position.x as u32, canvas.height - p.position.y as u32, color);
+        let i = canvas.height - p.position.y as u32;
+        let j = p.position.x as u32;
+        canvas.write_pixel(i, j, color);
         p = tick(&e, p);
     }
     canvas.canvas_to_ppm("projectile.ppm".to_string());
