@@ -6,3 +6,7 @@ pub mod color;
 pub use color::*;
 pub mod canvas;
 pub use canvas::*;
+pub mod matrix;
+pub use matrix::*;
+pub mod float_cmp;
+pub use float_cmp::*;
