@@ -1,7 +1,7 @@
 use std::ops::{Index, Mul};
 use super::float_cmp;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrix {
     pub cells: Vec<Vec<f32>>,
     pub n_rows: usize,
@@ -127,6 +127,20 @@ impl Matrix {
         let sign;
         if (row + col) % 2 == 1 {sign = -1.0;} else {sign = 1.0;}
         sign * self.minor(row, col)
+    }
+    pub fn is_invertible(&self) -> bool {
+        self.determinant() != 0.0
+    }
+    pub fn inverse_matrix(&self) -> Self {
+        assert!(self.is_invertible(), "matrix is not invertible");
+        let mut matrix = Self::zero_matrix(self.n_rows, self.n_cols);
+        let det = self.determinant();
+        for i in 0..self.n_rows {
+            for j in 0..self.n_cols {
+                matrix.cells[j][i] = self.cofactor(i, j) / det;
+            }
+        }
+        matrix
     }
 }
 
@@ -353,4 +367,27 @@ pub mod tests {
         let A = Matrix::new( matrix );
         assert!(float_cmp::equal(A.determinant(), -4071.0));
     }
+    #[test]
+    fn matrix_inverse() {
+        let row1 = vec![0.0, 2.0, 3.0, 4.0];
+        let row2 = vec![5.0, 6.0, 7.0, 8.0];
+        let row3 = vec![9.0, 8.0, 8.0, 6.0];
+        let row4 = vec![5.0, 4.0, 3.0, 2.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let A = Matrix::new( matrix );
+
+        let row1 = vec![-2.0, 1.0, 2.0, 3.0];
+        let row2 = vec![3.0, 2.0, 1.0, -1.0];
+        let row3 = vec![4.0, 3.0, 6.0, 5.0];
+        let row4 = vec![1.0, 2.0, 7.0, 8.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let B = Matrix::new( matrix );
+
+        let D = A.clone();
+        let C = A * &B;
+
+        assert_eq!(C * &B.inverse_matrix(), D);
+        let AI = D.inverse_matrix();
+        assert_eq!(D * &AI, Matrix::identity_matrix(4));
+   }
 }
