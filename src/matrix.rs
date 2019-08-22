@@ -79,6 +79,55 @@ impl Matrix {
             n_cols: cols,
         }
     }
+    pub fn identity_matrix(dim: usize) -> Self {
+        let mut matrix = Self::zero_matrix(dim, dim);
+        for i in 0..dim {
+            matrix.cells[i][i] = 1.0;
+        }
+        matrix
+    }
+    pub fn transpose(&self) -> Self {
+        Matrix::new(self.columns())
+    }
+    pub fn determinant(&self) -> f32 {
+        assert_eq!(self.n_rows, self.n_cols, "can't computer determinant for non square matrix");
+        if (self.n_rows == 2) && (self.n_cols == 2) {
+            self.cells[0][0] * self.cells[1][1] - self.cells[0][1] * self.cells[1][0]
+        } else {
+            let mut det = 0.0;
+            for i in 0..self.n_cols {
+                det += self[0][i] * self.cofactor(0, i);
+            }
+            det
+        }
+    }
+    pub fn sub_matrix(&self, row: usize, col: usize) -> Self {
+        assert!((row < self.n_rows) && (col < self.n_cols), "submatrix arguments overflow matrix dimensions");
+        let mut matrix = Vec::new();
+        for i in 0..self.n_rows {
+            if i == row { continue; }
+            let mut row_vector = Vec::new();
+            for j in 0..self.n_cols {
+                if j == col { continue; }
+                row_vector.push(self.cells[i][j]);
+            }
+            matrix.push(row_vector);
+        }
+
+        Self {
+            cells: matrix,
+            n_rows: self.n_rows - 1,
+            n_cols: self.n_cols - 1,
+        }
+    }
+    pub fn minor(&self, row: usize, col: usize) -> f32 {
+        self.sub_matrix(row, col).determinant()
+    }
+    pub fn cofactor(&self, row: usize, col: usize) -> f32 {
+        let sign;
+        if (row + col) % 2 == 1 {sign = -1.0;} else {sign = 1.0;}
+        sign * self.minor(row, col)
+    }
 }
 
 impl Index<usize> for Matrix {
@@ -218,5 +267,90 @@ pub mod tests {
         let A = Matrix::new( matrix );
 
         assert_eq!((A * vec![1.0, 2.0, 3.0, 1.0]).get_tuple(), vec![18.0, 24.0, 33.0, 1.0]);
+    }
+    #[test]
+    fn identity_matrix() {
+        let row1 = vec![1.0, 2.0, 3.0, 4.0];
+        let row2 = vec![2.0, 4.0, 4.0, 2.0];
+        let row3 = vec![8.0, 6.0, 4.0, 1.0];
+        let row4 = vec![0.0, 0.0, 0.0, 1.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let A = Matrix::new( matrix );
+
+        let I = Matrix::identity_matrix(4usize);
+        assert_eq!(I * &A, A);
+    }
+    #[test]
+    fn matrix_transpose() {
+        let row1 = vec![0.0, 9.0, 3.0, 0.0];
+        let row2 = vec![9.0, 8.0, 0.0, 8.0];
+        let row3 = vec![1.0, 8.0, 5.0, 3.0];
+        let row4 = vec![0.0, 0.0, 5.0, 8.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let A = Matrix::new( matrix );
+
+        let row1 = vec![0.0, 9.0, 1.0, 0.0];
+        let row2 = vec![9.0, 8.0, 8.0, 0.0];
+        let row3 = vec![3.0, 0.0, 5.0, 5.0];
+        let row4 = vec![0.0, 8.0, 3.0, 8.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let B = Matrix::new( matrix );
+
+        assert_eq!(A.transpose(), B);
+    }
+    #[test]
+    fn det_2x2() {
+        let row1 = vec![1.0, 5.0];
+        let row2 = vec![-3.0, 2.0];
+        let matrix = vec![row1, row2];
+        let A = Matrix::new( matrix );
+        assert!(float_cmp::equal(A.determinant(), 17.0));
+    }
+    #[test]
+    fn sub_matrix() {
+        let row1 = vec![0.0, 9.0, 3.0, 0.0];
+        let row2 = vec![9.0, 8.0, 0.0, 8.0];
+        let row3 = vec![1.0, 8.0, 5.0, 3.0];
+        let row4 = vec![0.0, 0.0, 5.0, 8.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let A = Matrix::new( matrix );
+
+        let row1 = vec![0.0, 9.0, 3.0];
+        let row2 = vec![9.0, 8.0, 0.0];
+        let row3 = vec![1.0, 8.0, 5.0];
+        let matrix = vec![row1, row2, row3];
+        let B = Matrix::new( matrix );
+
+        assert_eq!(A.sub_matrix(3, 3), B);
+    }
+    #[test]
+    fn minor() {
+        let row1 = vec![3.0, 5.0, 0.0];
+        let row2 = vec![2.0, -1.0, -7.0];
+        let row3 = vec![6.0, -1.0, 5.0];
+        let matrix = vec![row1, row2, row3];
+        let A = Matrix::new( matrix );
+
+        assert!(float_cmp::equal(A.minor(1, 0), 25.0));
+    }
+    #[test]
+    fn cofactor() {
+        let row1 = vec![3.0, 5.0, 0.0];
+        let row2 = vec![2.0, -1.0, -7.0];
+        let row3 = vec![6.0, -1.0, 5.0];
+        let matrix = vec![row1, row2, row3];
+        let A = Matrix::new( matrix );
+
+        assert!(float_cmp::equal(A.cofactor(1, 0), -25.0));
+    }
+    #[test]
+    fn determinant_large() {
+        let row1 = vec![-2.0, -8.0, 3.0, 5.0];
+        let row2 = vec![-3.0, 1.0, 7.0, 3.0];
+        let row3 = vec![1.0, 2.0, -9.0, 6.0];
+        let row4 = vec![-6.0, 7.0, 7.0, -9.0];
+        let matrix = vec![row1, row2, row3, row4];
+        let A = Matrix::new( matrix );
+        assert!(float_cmp::equal(A.determinant(), -4071.0));
     }
 }
