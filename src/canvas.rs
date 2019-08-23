@@ -28,8 +28,8 @@ impl Canvas {
         }
     }
     pub fn write_pixel(&mut self, row: u32, col: u32, color: Color) {
-        assert!(row < self.height, "row value overflows height of canvas");
-        assert!(col < self.width, "col value overflows width of canvas");
+        assert!(row < self.height, "row value {} overflows height of canvas", row);
+        assert!(col < self.width, "col value {} overflows width of canvas", col);
         self.grid[row as usize][col as usize] = color;
     }
     fn clamp(i: f32) -> u8 {
