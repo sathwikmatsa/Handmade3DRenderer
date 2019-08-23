@@ -1,5 +1,6 @@
 use std::ops::{Index, Mul};
 use super::float_cmp;
+use super::vec3::Vec3;
 
 #[derive(Debug, Clone)]
 pub struct Matrix {
@@ -142,6 +143,72 @@ impl Matrix {
         }
         matrix
     }
+    pub fn translation(x: f32, y: f32, z: f32) -> Self {
+        let mut matrix = Self::identity_matrix(4);
+        matrix.cells[0][3] = x;
+        matrix.cells[1][3] = y;
+        matrix.cells[2][3] = z;
+        matrix
+    }
+    pub fn translate(&self, x: f32, y: f32, z: f32) -> Self {
+        Self::translation(x, y, z) * self
+    }
+    pub fn scaling(x: f32, y: f32, z: f32) -> Self {
+        let mut matrix = Self::identity_matrix(4);
+        matrix.cells[0][0] = x;
+        matrix.cells[1][1] = y;
+        matrix.cells[2][2] = z;
+        matrix
+    }
+    pub fn scale(&self, x: f32, y: f32, z: f32) -> Self {
+        Self::scaling(x, y, z) * self
+    }
+    pub fn rotation_x(rads: f32) -> Self {
+        let mut matrix = Self::identity_matrix(4);
+        matrix.cells[1][1] = rads.cos();
+        matrix.cells[1][2] = -rads.sin();
+        matrix.cells[2][1] = rads.sin();
+        matrix.cells[2][2] = rads.cos();
+        matrix
+    }
+    pub fn rotate_x(&self, rads: f32) -> Self {
+        Matrix::rotation_x(rads) * self
+    }
+    pub fn rotation_y(rads: f32) -> Self {
+        let mut matrix = Self::identity_matrix(4);
+        matrix.cells[0][0] = rads.cos();
+        matrix.cells[0][2] = rads.sin();
+        matrix.cells[2][0] = -rads.sin();
+        matrix.cells[2][2] = rads.cos();
+        matrix
+    }
+    pub fn rotate_y(&self, rads: f32) -> Self {
+        Matrix::rotation_y(rads) * self
+    }
+    pub fn rotation_z(rads: f32) -> Self {
+        let mut matrix = Self::identity_matrix(4);
+        matrix.cells[0][0] = rads.cos();
+        matrix.cells[0][1] = -rads.sin();
+        matrix.cells[1][0] = rads.sin();
+        matrix.cells[1][1] = rads.cos();
+        matrix
+    }
+    pub fn rotate_z(&self, rads: f32) -> Self {
+        Matrix::rotation_z(rads) * self
+    }
+    pub fn shearing(xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
+        let mut matrix = Self::identity_matrix(4);
+        matrix.cells[0][1] = xy;
+        matrix.cells[0][2] = xz;
+        matrix.cells[1][0] = yx;
+        matrix.cells[1][2] = yz;
+        matrix.cells[2][0] = zx;
+        matrix.cells[2][1] = zy;
+        matrix
+    }
+    pub fn shear(&self, xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
+        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
 }
 
 impl Index<usize> for Matrix {
@@ -173,12 +240,60 @@ impl Mul<&Self> for Matrix {
     }
 }
 
+impl<'a, 'b> Mul<&'b Matrix> for &'a Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: &'b Matrix) -> Matrix {
+        assert_eq!(self.n_cols, rhs.n_rows, "cannot multiply given matrices");
+        let m = self.n_rows;
+        let n = rhs.n_cols;
+        let mut matrix = Matrix::zero_matrix(m, n);
+        for (i, row) in self.cells.iter().enumerate() {
+            for (j, col) in rhs.columns().iter().enumerate() {
+                let mut dot_product = 0.0;
+                for k in 0..row.len() {
+                    dot_product += row[k] * col[k];
+                }
+                matrix.cells[i][j] = dot_product;
+            }
+        }
+        matrix
+    }
+}
+
 impl Mul<Vec<f32>> for Matrix {
     type Output = Self;
 
     fn mul(self, rhs: Vec<f32>) -> Self {
         let other_matrix = Self::column_matrix(rhs);
         self * &other_matrix
+    }
+}
+
+impl<'a> Mul<Vec<f32>> for &'a Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: Vec<f32>) -> Matrix {
+        let other_matrix = Matrix::column_matrix(rhs);
+        self * &other_matrix
+    }
+}
+
+impl Mul<Vec3> for Matrix {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        let v = (self * rhs.as_vec()).get_tuple();
+        Vec3::new(v)
+    }
+}
+
+impl<'a> Mul<Vec3> for &'a Matrix {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        let v = (self * rhs.as_vec()).get_tuple();
+        Vec3::new(v)
     }
 }
 
@@ -201,6 +316,7 @@ impl PartialEq for Matrix {
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use super::super::vec3::*;
     #[test]
     fn create_matrix() {
         let row1 = vec![1.0, 2.0, 3.0, 4.0];
@@ -389,5 +505,86 @@ pub mod tests {
         assert_eq!(C * &B.inverse_matrix(), D);
         let AI = D.inverse_matrix();
         assert_eq!(D * &AI, Matrix::identity_matrix(4));
-   }
+    }
+    #[test]
+    fn translation_of_point() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let point = Vec3::point(-3, 4, 5);
+        assert_eq!(transform * point, Vec3::point(2, 1, 7));
+    }
+    #[test]
+    fn inverse_translation() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let inv_transform = transform.inverse_matrix();
+        let point = Vec3::point(-3, 4, 5);
+        assert_eq!(inv_transform * point, Vec3::point(-8, 7, 3));
+    }
+    #[test]
+    fn translating_vectors() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let vector = Vec3::vector(-3, 4, 5);
+        assert_eq!(transform * vector, vector);
+    }
+    #[test]
+    fn scaling() {
+        let transform = Matrix::scaling(2.0, 3.0, 4.0);
+        let inv_transform = transform.inverse_matrix();
+        let point = Vec3::point(-4, 6, 8);
+        let vector = Vec3::vector(-4, 6, 8);
+        assert_eq!(&transform * point, Vec3::point(-8, 18, 32));
+        assert_eq!(&transform * vector, Vec3::vector(-8, 18, 32));
+        assert_eq!(inv_transform * point, Vec3::point(-2, 2, 2));
+    }
+    #[test]
+    fn rotation_around_x() {
+        let full_quarter = Matrix::rotation_x(std::f32::consts::PI / 2.0);
+        let point = Vec3::point(0, 1, 0);
+        assert_eq!(full_quarter * point, Vec3::point(0, 0, 1));
+    }
+    #[test]
+    fn rotation_around_y() {
+        let full_quarter = Matrix::rotation_y(std::f32::consts::PI / 2.0);
+        let point = Vec3::point(0, 0, 1);
+        assert_eq!(full_quarter * point, Vec3::point(1, 0, 0));
+    }
+    #[test]
+    fn rotation_around_z() {
+        let full_quarter = Matrix::rotation_z(std::f32::consts::PI / 2.0);
+        let point = Vec3::point(0, 1, 0);
+        assert_eq!(full_quarter * point, Vec3::point(-1, 0, 0));
+    }
+    #[test]
+    fn shearing() {
+        let point = Vec3::point(2, 3, 4);
+        let xyt = Matrix::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let xzt = Matrix::shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+        let yxt = Matrix::shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        let yzt = Matrix::shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        let zxt = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        let zyt = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        assert_eq!(xyt * point, Vec3::point(5, 3, 4));
+        assert_eq!(xzt * point, Vec3::point(6, 3, 4));
+        assert_eq!(yxt * point, Vec3::point(2, 5, 4));
+        assert_eq!(yzt * point, Vec3::point(2, 7, 4));
+        assert_eq!(zxt * point, Vec3::point(2, 3, 6));
+        assert_eq!(zyt * point, Vec3::point(2, 3, 7));
+    }
+    #[test]
+    fn chaining_transformations() {
+        let p = Vec3::point(1, 0, 1);
+        let A = Matrix::rotation_x(std::f32::consts::PI / 2.0);
+        let B = Matrix::scaling(5.0, 5.0, 5.0);
+        let C = Matrix::translation(10.0, 5.0, 7.0);
+        let p2 = &A * p;
+        let p3 = &B * p2;
+        let p4 = &C * p3;
+        assert_eq!(p4, Vec3::point(15, 0, 7));
+        // chained transformation
+        assert_eq!(p4, &C * &B * &A * p);
+        // fluent API
+        assert_eq!(p4, Matrix::identity_matrix(4)
+                               .rotate_x(std::f32::consts::PI / 2.0)
+                               .scale(5.0, 5.0, 5.0)
+                               .translate(10.0, 5.0, 7.0) * p)
+    }
 }

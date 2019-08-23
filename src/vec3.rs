@@ -1,15 +1,6 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
 use super::float_cmp;
 
-impl PartialEq for Vec3 {
-    fn eq(&self, other: &Self) -> bool {
-        float_cmp::equal(self.x, other.x) &&
-        float_cmp::equal(self.y, other.y) &&
-        float_cmp::equal(self.z, other.z) &&
-        self.t == other.t
-    }
-}
-
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Vec3Type {
     Point,
@@ -57,6 +48,20 @@ impl Vec3 {
             z: z.value(),
             t: Vec3Type::Vector,
         }
+    }
+    pub fn new(v: Vec<f32>) -> Self {
+        assert_eq!(v.len(), 4, "vector length doesn't equal 4, can't create Vec3");
+        let vec_type : Vec3Type = if float_cmp::equal(v[3], 0.0) { Vec3Type::Vector } else { Vec3Type::Point };
+        Self {
+            x: v[0],
+            y: v[1],
+            z: v[2],
+            t: vec_type,
+        }
+    }
+    pub fn as_vec(&self) -> Vec<f32> {
+        let w : f32 = if self.t == Vec3Type::Vector { 0.0 } else { 1.0 };
+        vec![self.x, self.y, self.z, w]
     }
     pub fn magnitude(&self) -> f32 {
         assert_eq!(self.t, Vec3Type::Vector, "Cannot call magnitude method on Point type");
@@ -205,6 +210,15 @@ impl Div<i32> for Vec3 {
             z: self.z / rhs.value(),
             t: self.t,
         }
+    }
+}
+
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        float_cmp::equal(self.x, other.x) &&
+        float_cmp::equal(self.y, other.y) &&
+        float_cmp::equal(self.z, other.z) &&
+        self.t == other.t
     }
 }
 
