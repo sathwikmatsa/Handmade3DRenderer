@@ -67,6 +67,10 @@ impl Vec3 {
         assert_eq!(self.t, Vec3Type::Vector, "Cannot call magnitude method on Point type");
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
+    pub fn magnitude_square(&self) -> f32 {
+        assert_eq!(self.t, Vec3Type::Vector, "Cannot call magnitude_square method on Point type");
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
     pub fn normalize(&self) -> Self {
         assert_eq!(self.t, Vec3Type::Vector, "Cannot call normalize method on Point type");
         let m = self.magnitude();
@@ -84,6 +88,12 @@ impl Vec3 {
     pub fn cross(&self, other: Self) -> Self {
         assert_eq!(self.t, Vec3Type::Vector, "Cannot call cross product on two point types");
         Vec3::vector(self.y*other.z - self.z*other.y, self.z*other.x - self.x*other.z, self.x*other.y - self.y*other.x)
+    }
+    pub fn is_point(&self) -> bool {
+        self.t == Vec3Type::Point
+    }
+    pub fn is_vector(&self) -> bool {
+        self.t == Vec3Type::Vector
     }
 }
 
