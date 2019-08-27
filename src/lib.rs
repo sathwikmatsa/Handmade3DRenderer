@@ -10,6 +10,8 @@ pub mod matrix;
 pub use matrix::*;
 pub mod ray;
 pub use ray::*;
+pub mod object;
+pub use object::*;
 pub mod sphere;
 pub use sphere::*;
 pub mod float_cmp;

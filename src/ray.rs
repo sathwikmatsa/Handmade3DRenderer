@@ -1,8 +1,5 @@
 use super::vec3::Vec3;
-
-pub trait Object {
-    fn intersection(&self, ray: &Ray) -> Vec<f32>;
-}
+use super::object::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Ray {
@@ -22,8 +19,7 @@ impl Ray {
     pub fn position(&self, t: f32) -> Vec3 {
         self.origin + self.direction * t
     }
-    pub fn intersect<T>(&self, obj: &T) -> Vec<f32>
-    where T : Object {
+    pub fn intersect<'a, T: Object>(&self, obj: &'a T) -> Intersections<'a, T> {
         obj.intersection(self)
     }
 }
