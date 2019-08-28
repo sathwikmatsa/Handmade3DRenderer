@@ -1,4 +1,5 @@
 use super::vec3::Vec3;
+use super::matrix::Matrix;
 use super::object::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -22,6 +23,12 @@ impl Ray {
     pub fn intersect<'a, T: Object>(&self, obj: &'a T) -> Intersections<'a, T> {
         obj.intersection(self)
     }
+    pub fn transform(&self, transform: &Matrix) -> Self {
+        Self {
+            origin: transform * self.origin,
+            direction: transform * self.direction,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -42,5 +49,19 @@ pub mod tests {
         assert_eq!(r.position(1.0), Vec3::point(3, 3, 4));
         assert_eq!(r.position(-1.0), Vec3::point(1, 3, 4));
         assert_eq!(r.position(2.5), Vec3::point(4.5, 3.0, 4.0));
+    }
+    #[test]
+    fn translating_ray() {
+        let r1 = Ray::new(Vec3::point(1, 2, 3), Vec3::vector(0, 1, 0));
+        let r2 = r1.transform(&Matrix::translation(3.0, 4.0, 5.0));
+        assert_eq!(r2.origin, Vec3::point(4, 6, 8));
+        assert_eq!(r2.direction, Vec3::vector(0, 1, 0));
+    }
+    #[test]
+    fn scaling_ray() {
+        let r1 = Ray::new(Vec3::point(1, 2, 3), Vec3::vector(0, 1, 0));
+        let r2 = r1.transform(&Matrix::scaling(2.0, 3.0, 4.0));
+        assert_eq!(r2.origin, Vec3::point(2, 6, 12));
+        assert_eq!(r2.direction, Vec3::vector(0, 3, 0));
     }
 }
