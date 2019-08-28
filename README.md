@@ -12,3 +12,8 @@ A simple 3D renderer implemented in Rust using Whitted ray tracing technique. [W
 
 
 ![analog clock](https://user-images.githubusercontent.com/30603669/63618662-3d2f6680-c60a-11e9-8fc7-89c3eac819c0.png)
+
+
+- Silhouette of a sphere
+
+![sphere silhouette](https://user-images.githubusercontent.com/30603669/63872195-03c87380-c9db-11e9-8a49-2bb9f90e42ea.png)
