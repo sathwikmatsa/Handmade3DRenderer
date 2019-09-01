@@ -17,3 +17,8 @@ A simple 3D renderer implemented in Rust using Whitted ray tracing technique. [W
 - Silhouette of a sphere
 
 ![sphere silhouette](https://user-images.githubusercontent.com/30603669/63872195-03c87380-c9db-11e9-8a49-2bb9f90e42ea.png)
+
+
+- 3D Sphere
+
+![3d sphere](https://user-images.githubusercontent.com/30603669/64075694-20192880-ccd9-11e9-99de-8d6e5f3a5799.png)
