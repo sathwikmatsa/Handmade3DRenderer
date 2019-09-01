@@ -1,4 +1,7 @@
 use super::vec3::Vec3;
+use super::light::Light;
+use super::color::Color;
+use super::material::Material;
 use super::matrix::Matrix;
 use super::ray::*;
 use super::object::*;
@@ -7,6 +10,7 @@ use super::object::*;
 pub struct Sphere {
     id: usize,
     pub transform: Matrix,
+    pub material: Material,
 }
 
 impl Object for Sphere {
@@ -33,6 +37,11 @@ impl Object for Sphere {
         world_normal[3] = 0.0;
         Vec3::new(world_normal).normalize()
     }
+    fn lighting_at(&self, point: Vec3, eye: Vec3, light: Light) -> Color {
+        let normal_v = self.normal_at(point);
+        let eye_v = point - eye;
+        self.material.lighting(light, point, eye_v, normal_v)
+    }
 }
 
 impl Sphere {
@@ -41,6 +50,7 @@ impl Sphere {
         Self{
             id,
             transform : Matrix::identity_matrix(4),
+            material: Material::default(),
         }
     }
     pub fn get_id(&self) -> usize {
@@ -50,6 +60,9 @@ impl Sphere {
         assert_eq!(transform.n_rows, 4, "Not a transform, invalid dimensions");
         assert_eq!(transform.n_cols, 4, "Not a transform, invalid dimensions");
         self.transform = transform;
+    }
+    pub fn set_material(&mut self, material: Material) {
+        self.material = material;
     }
 }
 
@@ -126,5 +139,15 @@ pub mod tests {
         s.set_transform(m);
         let n = s.normal_at(Vec3::point(0.0, f32::sqrt(2.0) / 2.0, -1.0*f32::sqrt(2.0) / 2.0));
         assert_eq!(n, Vec3::vector(0.0, 0.97014, -0.24254));
+    }
+    #[test]
+    fn sphere_material() {
+        let mut s = Sphere::new();
+        assert_eq!(s.material, Material::default());
+        let mut material = Material::default();
+        material.shininess = 150.0;
+        let mat_c = material.clone();
+        s.set_material(material);
+        assert_eq!(s.material, mat_c);
     }
 }

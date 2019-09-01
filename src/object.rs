@@ -1,6 +1,8 @@
 use std::sync::atomic;
 use std::cmp::Ordering;
 use super::ray::Ray;
+use super::light::Light;
+use super::color::Color;
 use super::vec3::Vec3;
 use super::float_cmp;
 use std::ops::{Index};
@@ -11,6 +13,7 @@ pub trait Object {
     fn get_uid() -> usize { unsafe {ID.fetch_add(1, atomic::Ordering::SeqCst)} }
     fn intersection<'a>(&'a self, ray: &Ray) -> Intersections<'a, Self> where Self : Sized;
     fn normal_at(&self, point: Vec3) -> Vec3;
+    fn lighting_at(&self, point: Vec3, eye: Vec3, light: Light) -> Color;
 }
 
 #[derive(Debug, Clone)]
