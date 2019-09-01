@@ -81,6 +81,11 @@ impl Vec3 {
             t: self.t,
         }
     }
+    pub fn reflect(&self, normal: Self) -> Self {
+        assert_eq!(self.t, Vec3Type::Vector, "Reflect method is undefined for Point type");
+        assert_eq!(normal.t, Vec3Type::Vector, "normal has to be Vector type");
+        *self - normal * 2 * self.dot(normal)
+    }
     pub fn dot(&self, other: Self) -> f32 {
         assert_eq!(self.t, Vec3Type::Vector, "Cannot call dot product on two point types");
         self.x * other.x + self.y * other.y + self.z * other.z
@@ -316,5 +321,17 @@ mod tests {
         let i = 0.00001;
         let j = 0.00001;
         assert_eq!(true, float_cmp::equal(i, j));
+    }
+    #[test]
+    fn reflecting_vector() {
+        let v = Vec3::vector(1, -1, 0);
+        let n = Vec3::vector(0, 1, 0);
+        let r = v.reflect(n);
+        assert_eq!(r, Vec3::vector(1, 1, 0));
+
+        let v = Vec3::vector(0, -1, 0);
+        let n = Vec3::vector(f32::sqrt(2.0)/2.0, f32::sqrt(2.0)/2.0, 0.0);
+        let r = v.reflect(n);
+        assert_eq!(r, Vec3::vector(1, 0, 0));
     }
 }
