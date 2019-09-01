@@ -5,6 +5,7 @@ use super::light::Light;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Material {
     pub color: Color,
+    // Phong Reflection Model
     pub ambient: f32,
     pub diffuse: f32,
     pub specular: f32,

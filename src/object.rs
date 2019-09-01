@@ -13,7 +13,7 @@ pub trait Object {
     fn get_uid() -> usize { unsafe {ID.fetch_add(1, atomic::Ordering::SeqCst)} }
     fn intersection<'a>(&'a self, ray: &Ray) -> Intersections<'a, Self> where Self : Sized;
     fn normal_at(&self, point: Vec3) -> Vec3;
-    fn lighting_at(&self, point: Vec3, eye: Vec3, light: Light) -> Color;
+    fn lighting_at(&self, point: Vec3, eye_v: Vec3, light: Light) -> Color;
 }
 
 #[derive(Debug, Clone)]
@@ -68,10 +68,15 @@ impl<'a, T: Object> Intersections<'a, T> {
     pub fn len(&self) -> usize {
         self.crossings.len()
     }
-    pub fn hit(&self) -> &Intersection<'a, T> {
+    pub fn hit(&self) -> Option<&Intersection<'a, T>> {
         // intersection with lowest nonnegative t value
+        if self.len() == 0 {return None;}
         let ray_origin = Intersection::new(0.0, self.crossings[0].obj);
-        &self.crossings[self.crossings.binary_search(&ray_origin).unwrap_or_else(|e| e)]
+        let r = self.crossings.binary_search(&ray_origin);
+        match r {
+            Ok(i) => Some(&self.crossings[i]),
+            Err(i) => if i < self.len() {Some(&self.crossings[i])} else {None},
+        }
     }
 }
 

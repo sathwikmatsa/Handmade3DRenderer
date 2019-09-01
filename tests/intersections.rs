@@ -42,7 +42,7 @@ fn hit_intersection() {
     let mut intersections = Intersections::new();
     intersections.push(i1);
     intersections.push(i2);
-    assert_eq!(intersections.hit(), &i1_c);
+    assert_eq!(intersections.hit(), Some(&i1_c));
 
     // when some intersections have -ve t
     let i1 = Intersection::new(-1.0, &sphere);
@@ -51,6 +51,13 @@ fn hit_intersection() {
     let mut intersections = Intersections::new();
     intersections.push(i1);
     intersections.push(i2);
-    assert_eq!(intersections.hit(), &i2_c);
+    assert_eq!(intersections.hit(), Some(&i2_c));
 
+    // when all intersections have -ve t
+    let i1 = Intersection::new(-1.0, &sphere);
+    let i2 = Intersection::new(-2.0, &sphere);
+    let mut intersections = Intersections::new();
+    intersections.push(i1);
+    intersections.push(i2);
+    assert_eq!(intersections.hit(), None);
 }
