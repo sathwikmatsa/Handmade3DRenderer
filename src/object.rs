@@ -1,18 +1,16 @@
 use std::sync::atomic;
 use std::cmp::Ordering;
 use super::ray::Ray;
+use super::vec3::Vec3;
 use super::float_cmp;
 use std::ops::{Index};
 
 static mut ID : atomic::AtomicUsize = atomic::AtomicUsize::new(0);
 
 pub trait Object {
+    fn get_uid() -> usize { unsafe {ID.fetch_add(1, atomic::Ordering::SeqCst)} }
     fn intersection<'a>(&'a self, ray: &Ray) -> Intersections<'a, Self> where Self : Sized;
-    fn get_uid() -> usize {
-        unsafe {
-            ID.fetch_add(1, atomic::Ordering::SeqCst)
-        }
-    }
+    fn normal_at(&self, point: Vec3) -> Vec3;
 }
 
 #[derive(Debug, Clone)]

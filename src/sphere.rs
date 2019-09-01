@@ -25,6 +25,14 @@ impl Object for Sphere {
         }
         intersections
     }
+    fn normal_at(&self, world_point: Vec3) -> Vec3 {
+        let object_point = self.transform.inverse_matrix() * world_point;
+        let object_normal = object_point - Vec3::point(0, 0, 0);
+        let mut world_normal = (self.transform.inverse_matrix().transpose() * object_normal.as_vec())
+                                .get_tuple();
+        world_normal[3] = 0.0;
+        Vec3::new(world_normal).normalize()
+    }
 }
 
 impl Sphere {
@@ -71,5 +79,52 @@ pub mod tests {
         let new_transform = Matrix::translation(1.0, 2.0, 3.0);
         s.set_transform(new_transform);
         assert_eq!(s.transform, Matrix::translation(1.0, 2.0, 3.0));
+    }
+    #[test]
+    fn normal_on_x() {
+        let s = Sphere::new();
+        let n = s.normal_at(Vec3::point(1, 0, 0));
+        assert_eq!(n, Vec3::vector(1, 0, 0));
+    }
+    #[test]
+    fn normal_on_y() {
+        let s = Sphere::new();
+        let n = s.normal_at(Vec3::point(0, 1, 0));
+        assert_eq!(n, Vec3::vector(0, 1, 0));
+    }
+    #[test]
+    fn normal_on_z() {
+        let s = Sphere::new();
+        let n = s.normal_at(Vec3::point(0, 0, 1));
+        assert_eq!(n, Vec3::vector(0, 0, 1));
+    }
+    #[test]
+    fn normal_on_non_axial() {
+        let s = Sphere::new();
+        let c = f32::sqrt(3.0) / 3.0;
+        let n = s.normal_at(Vec3::point(c, c, c));
+        assert_eq!(n, Vec3::vector(c, c, c));
+    }
+    #[test]
+    fn normal_is_normalized() {
+        let s = Sphere::new();
+        let c = f32::sqrt(3.0) / 3.0;
+        let n = s.normal_at(Vec3::point(c, c, c));
+        assert_eq!(n, n.normalize());
+    }
+    #[test]
+    fn normal_on_translated_sphere() {
+        let mut s = Sphere::new();
+        s.set_transform(Matrix::translation(0.0, 1.0, 0.0));
+        let n = s.normal_at(Vec3::point(0.0, 1.70711, -0.70711));
+        assert_eq!(n, Vec3::vector(0.0, 0.70711, -0.70711));
+    }
+    #[test]
+    fn normal_on_transformed_sphere() {
+        let mut s = Sphere::new();
+        let m = Matrix::scaling(1.0, 0.5, 1.0) * &Matrix::rotation_z(std::f32::consts::PI / 5.0);
+        s.set_transform(m);
+        let n = s.normal_at(Vec3::point(0.0, f32::sqrt(2.0) / 2.0, -1.0*f32::sqrt(2.0) / 2.0));
+        assert_eq!(n, Vec3::vector(0.0, 0.97014, -0.24254));
     }
 }
