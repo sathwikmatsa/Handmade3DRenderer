@@ -1,6 +1,7 @@
 use super::vec3::Vec3;
 use super::matrix::Matrix;
 use super::object::*;
+use super::intersection::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Ray {

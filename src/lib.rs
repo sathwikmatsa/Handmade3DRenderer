@@ -16,6 +16,8 @@ pub mod material;
 pub use material::*;
 pub mod object;
 pub use object::*;
+pub mod intersection;
+pub use intersection::*;
 pub mod sphere;
 pub use sphere::*;
 pub mod float_cmp;

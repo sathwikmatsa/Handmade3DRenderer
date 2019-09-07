@@ -26,7 +26,7 @@ fn main() {
     let mut shape = Sphere::new();
     shape.material.color = Color::new(1.0, 0.2, 1.0);
     let sphere = Arc::new(shape);
-    let light = Arc::new(Light::new(Vec3::point(-10, 10, -10), Color::new(1.0, 1.0, 1.0)));
+    let light = Arc::new(Light::new(Vec3::point(-10, 10, -10), Color::new(0.0, 1.0, 0.0)));
     let mut handles = Vec::new();
     for i in 0..N_THREADS {
         let canvas = shared_canvas.clone();

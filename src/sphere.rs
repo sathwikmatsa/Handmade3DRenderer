@@ -5,6 +5,7 @@ use super::material::Material;
 use super::matrix::Matrix;
 use super::ray::*;
 use super::object::*;
+use super::intersection::*;
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
