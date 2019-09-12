@@ -21,7 +21,7 @@ impl Ray {
     pub fn position(&self, t: f32) -> Vec3 {
         self.origin + self.direction * t
     }
-    pub fn intersect<'a, T: Object>(&self, obj: &'a T) -> Intersections<'a, T> {
+    pub fn intersect<T: Object>(&self, obj: &Box<T>) -> Intersections {
         obj.intersection(self)
     }
     pub fn transform(&self, transform: &Matrix) -> Self {

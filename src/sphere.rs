@@ -15,7 +15,7 @@ pub struct Sphere {
 }
 
 impl Object for Sphere {
-    fn intersection<'a >(&'a self, actual_ray: &Ray) -> Intersections<'a, Self> {
+    fn intersection(&self, actual_ray: &Ray) -> Intersections {
         let ray = actual_ray.transform(&self.transform.inverse_matrix());
         let sphere_to_ray = ray.origin - Vec3::point(0, 0, 0);
         let a = ray.direction.magnitude_square();
@@ -25,8 +25,8 @@ impl Object for Sphere {
         let mut intersections  = Intersections::new();
 
         if discriminant >= 0.0 {
-            intersections.push(Intersection {t: (-b - discriminant.sqrt()) / (2.0 * a), obj: self});
-            intersections.push(Intersection {t: (-b + discriminant.sqrt()) / (2.0 * a), obj: self});
+            intersections.push(Intersection {t: (-b - discriminant.sqrt()) / (2.0 * a), obj_id: self.id});
+            intersections.push(Intersection {t: (-b + discriminant.sqrt()) / (2.0 * a), obj_id: self.id});
         }
         intersections
     }
