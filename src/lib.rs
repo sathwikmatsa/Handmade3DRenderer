@@ -8,6 +8,8 @@ pub mod canvas;
 pub use canvas::*;
 pub mod matrix;
 pub use matrix::*;
+pub mod world;
+pub use world::*;
 pub mod ray;
 pub use ray::*;
 pub mod light;

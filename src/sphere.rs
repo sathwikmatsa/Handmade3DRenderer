@@ -47,7 +47,7 @@ impl Object for Sphere {
 
 impl Sphere {
     pub fn new() -> Self {
-        let id = Self::get_uid();
+        let id = get_object_uid();
         Self{
             id,
             transform : Matrix::identity_matrix(4),

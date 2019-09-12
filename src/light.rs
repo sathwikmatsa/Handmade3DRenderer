@@ -1,7 +1,7 @@
 use super::color::Color;
 use super::vec3::Vec3;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Light {
     pub position: Vec3,
     pub intensity: Color,
