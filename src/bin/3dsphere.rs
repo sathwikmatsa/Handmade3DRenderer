@@ -24,7 +24,9 @@ fn main() {
             let xs : Intersections = ray.intersect(&shape);
             if let Some(x) = xs.hit() {
                 let point = ray.position(x.t);
-                let color = shape.lighting_at(point, -ray.direction, light);
+                let eye_v = -ray.direction;
+                let normal_v = shape.normal_at(point);
+                let color = shape.lighting_at(point, eye_v, normal_v, light);
                 canvas.write_pixel(row, col, color);
             }
         }

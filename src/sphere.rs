@@ -38,8 +38,7 @@ impl Object for Sphere {
         world_normal[3] = 0.0;
         Vec3::new(world_normal).normalize()
     }
-    fn lighting_at(&self, point: Vec3, eye_v: Vec3, light: Light) -> Color {
-        let normal_v = self.normal_at(point);
+    fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light) -> Color {
         let eye_v = eye_v.normalize();
         self.material.lighting(light, point, eye_v, normal_v)
     }

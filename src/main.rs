@@ -44,7 +44,9 @@ fn main() {
                     let xs : Intersections = ray.intersect(&(*sphere));
                     if let Some(x) = xs.hit() {
                         let point = ray.position(x.t);
-                        let color = sphere.lighting_at(point, -ray.direction, light);
+                        let eye_v = -ray.direction;
+                        let normal_v = sphere.normal_at(point);
+                        let color = sphere.lighting_at(point, eye_v, normal_v, light);
                         unsafe {(*canvas.data.get()).write_pixel(row, col, color);}
                     }
                 }

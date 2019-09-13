@@ -1,6 +1,17 @@
 use std::cmp::Ordering;
 use super::float_cmp;
+use super::vec3::Vec3;
 use std::ops::{Index};
+
+#[derive(Debug)]
+pub struct IntersectionState {
+    pub t: f32,
+    pub obj_id: usize,
+    pub point: Vec3,
+    pub eyev: Vec3,
+    pub normalv: Vec3,
+    pub inside: bool,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Intersection{
@@ -73,7 +84,6 @@ impl Index<usize> for Intersections {
         &self.crossings[index]
     }
 }
-
 
 #[cfg(test)]
 pub mod tests {
