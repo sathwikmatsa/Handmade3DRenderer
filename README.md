@@ -1,7 +1,7 @@
 # Handmade3DRenderer
 A simple 3D renderer implemented in Rust using Whitted ray tracing technique. [WIP]
 
-## Cool images it rendered as of now
+## Evolution in chronological order
 - Trajectory of a projectile
 
 
@@ -16,9 +16,17 @@ A simple 3D renderer implemented in Rust using Whitted ray tracing technique. [W
 
 - Silhouette of a sphere
 
+
 ![sphere silhouette](https://user-images.githubusercontent.com/30603669/63872195-03c87380-c9db-11e9-8a49-2bb9f90e42ea.png)
 
 
 - 3D Sphere
 
+
 ![3d sphere](https://user-images.githubusercontent.com/30603669/64075694-20192880-ccd9-11e9-99de-8d6e5f3a5799.png)
+
+
+- 3D Scene
+
+
+![3d scene](https://user-images.githubusercontent.com/30603669/64912047-41e9c500-d747-11e9-97a2-b457867df928.png)
