@@ -2,58 +2,63 @@
 
 extern crate Handmade3DRenderer;
 use Handmade3DRenderer::*;
-use std::thread;
-use std::cell::UnsafeCell;
-use std::sync::{Arc};
-use std::env;
-
-struct LockFree<T> {
-    data: UnsafeCell<T>,
-}
-
-unsafe impl<T> Sync for LockFree<T> {}
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let N_THREADS = if args.len() > 1 {*(&args[1].parse::<u32>().unwrap_or(4))} else {4};
-    const CANVAS_SIZE : u32 = 400;
-    let shared_canvas = Arc::new(LockFree{ data: UnsafeCell::new(Canvas::new(CANVAS_SIZE, CANVAS_SIZE))});
-    let eye = Arc::new(Vec3::point(0, 0, -5));
-    const WALL_Z : f32 = 10.0;
-    const WALL_SIZE : f32 = 7.0;
-    const PIXEL_SIZE : f32 = WALL_SIZE / CANVAS_SIZE as f32;
-    const HALF : f32 = WALL_SIZE / 2.0;
-    let mut shape = Sphere::new();
-    shape.material.color = Color::new(1.0, 0.2, 1.0);
-    let sphere = Arc::new(Box::new(shape));
-    let light = Arc::new(Light::new(Vec3::point(-10, 10, -10), Color::new(0.0, 1.0, 0.0)));
-    let mut handles = Vec::new();
-    for i in 0..N_THREADS {
-        let canvas = shared_canvas.clone();
-        let sphere = sphere.clone();
-        let eye = *eye.clone();
-        let light = *light.clone();
-        let n = N_THREADS;
-        handles.push(thread::spawn(move || {
-            for row in i*CANVAS_SIZE/n..(i+1)*CANVAS_SIZE/n {
-                let world_y = HALF - PIXEL_SIZE * row as f32;
-                for col in 0..CANVAS_SIZE {
-                    let world_x = -1.0 * HALF + PIXEL_SIZE * col as f32;
-                    let poc = Vec3::point(world_x, world_y, WALL_Z);
-                    let ray = Ray::new(eye, (poc - eye).normalize());
-                    let xs : Intersections = ray.intersect(&(*sphere));
-                    if let Some(x) = xs.hit() {
-                        let point = ray.position(x.t);
-                        let eye_v = -ray.direction;
-                        let normal_v = sphere.normal_at(point);
-                        let color = sphere.lighting_at(point, eye_v, normal_v, light);
-                        unsafe {(*canvas.data.get()).write_pixel(row, col, color);}
-                    }
-                }
-            }}));
-    }
-    for handle in handles {
-        handle.join().unwrap();
-    }
-    unsafe{(*shared_canvas.data.get()).canvas_to_ppm("3DSphereParallel.ppm".to_string());}
+    let mut world = World::new();
+    world.lights.push(Light::new(Vec3::point(-10, 10, -10), Color::new(1.0, 1.0, 1.0)));
+
+    let mut floor = Sphere::new();
+    floor.transform = Matrix::scaling(10.0, 0.01, 10.0);
+    floor.material.color = Color::new(1.0, 0.9, 0.9);
+    floor.material.specular = 0.0;
+
+    let mut left_wall = Sphere::new();
+    left_wall.transform = Matrix::translation(0.0, 0.0, 5.0)*
+                            &Matrix::rotation_y(-std::f32::consts::PI/4.0)*
+                            &Matrix::rotation_x(std::f32::consts::PI/2.0)*
+                            &Matrix::scaling(10.0, 0.01, 10.0);
+    left_wall.material = floor.material;
+
+    let mut right_wall = Sphere::new();
+    right_wall.transform = Matrix::translation(0.0, 0.0, 5.0)*
+                            &Matrix::rotation_y(std::f32::consts::PI/4.0)*
+                            &Matrix::rotation_x(std::f32::consts::PI/2.0)*
+                            &Matrix::scaling(10.0, 0.01, 10.0);
+    right_wall.material = floor.material;
+
+    let mut middle_sphere = Sphere::new();
+    middle_sphere.transform = Matrix::translation(-0.5, 1.0, 0.5);
+    middle_sphere.material.color = Color::new(0.1, 1.0, 0.5);
+    middle_sphere.material.diffuse = 0.7;
+    middle_sphere.material.specular = 0.3;
+
+    let mut left_sphere = Sphere::new();
+    left_sphere.transform = Matrix::translation(-1.5, 0.33, -0.75)*
+                                &Matrix::scaling(0.33, 0.33, 0.33);
+    left_sphere.material.color = Color::new(1.0, 0.8, 0.1);
+    left_sphere.material.diffuse = 0.7;
+    left_sphere.material.specular = 0.3;
+
+    let mut right_sphere = Sphere::new();
+    right_sphere.transform = Matrix::translation(1.5, 0.5, -0.5)*
+                                &Matrix::scaling(0.5, 0.5, 0.5);
+    right_sphere.material.color = Color::new(0.5, 1.0, 0.1);
+    right_sphere.material.diffuse = 0.7;
+    right_sphere.material.specular = 0.3;
+
+    world.objects.insert(floor.get_id(), Box::new(floor));
+    world.objects.insert(left_wall.get_id(), Box::new(left_wall));
+    world.objects.insert(right_wall.get_id(), Box::new(right_wall));
+    world.objects.insert(left_sphere.get_id(), Box::new(left_sphere));
+    world.objects.insert(middle_sphere.get_id(), Box::new(middle_sphere));
+    world.objects.insert(right_sphere.get_id(), Box::new(right_sphere));
+
+    let mut camera = Camera::new(100*5, 50*5, std::f32::consts::PI/3.0);
+    camera.transform = Matrix::view_transformation(
+                        Vec3::point(0.0, 1.5, -5.0),
+                        Vec3::point(0, 1, 0),
+                        Vec3::vector(0, 1, 0),
+    );
+    let canvas = camera.render(&world);
+    canvas.save_as_ppm("scene.ppm");
 }

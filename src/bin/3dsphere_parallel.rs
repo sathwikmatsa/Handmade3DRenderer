@@ -55,5 +55,5 @@ fn main() {
     for handle in handles {
         handle.join().unwrap();
     }
-    unsafe{(*shared_canvas.data.get()).canvas_to_ppm("3DSphereParallel.ppm".to_string());}
+    unsafe{(*shared_canvas.data.get()).save_as_ppm("3DSphereParallel.ppm");}
 }

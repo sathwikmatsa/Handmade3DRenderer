@@ -32,6 +32,11 @@ impl Canvas {
         assert!(col < self.width, "col value {} overflows width of canvas", col);
         self.grid[row as usize][col as usize] = color;
     }
+    pub fn pixel_at(&self, row: u32, col: u32) -> Color {
+        assert!(row < self.height, "row value {} overflows height of canvas", row);
+        assert!(col < self.width, "col value {} overflows width of canvas", col);
+        self.grid[row as usize][col as usize]
+    }
     fn clamp(i: f32) -> u8 {
         let mut scaled = (i * 255.0) as i32;
         if scaled > 255 {
@@ -41,7 +46,7 @@ impl Canvas {
         }
         scaled as u8
     }
-    pub fn canvas_to_ppm(&self, filename: String) {
+    pub fn save_as_ppm(&self, filename: &str) {
         let mut ppm = format!("P3\n{} {}\n255\n", self.width, self.height);
         for row in self.grid.iter() {
             for pixel in row.iter() {
@@ -76,7 +81,7 @@ mod tests {
         assert_eq!(c.grid[1usize][1usize], pix);
     }
     #[test]
-    fn save_as_ppm() {
+    fn canvas_to_ppm() {
         let mut c = Canvas::new(2, 2);
         let p0 = Color::new(1.0, 1.0, 1.0);
         let p1 = Color::new(-1.0, -1.0, -1.0);
@@ -86,7 +91,7 @@ mod tests {
         c.write_pixel(0, 1, p1);
         c.write_pixel(1, 0, p2);
         c.write_pixel(1, 1, p3);
-        c.canvas_to_ppm("img.ppm".to_string());
+        c.canvas_to_ppm("img.ppm");
         let ppm = format!("P3\n{} {}\n255\n255 255 255\n0 0 0\n255 255 255\n127 127 127\n", c.width, c.height);
         let mut file = File::open("img.ppm").expect("Unable to open the file");
         let mut contents = String::new();

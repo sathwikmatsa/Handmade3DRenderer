@@ -2,7 +2,7 @@ use super::color::Color;
 use super::vec3::Vec3;
 use super::light::Light;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Material {
     pub color: Color,
     // Phong Reflection Model

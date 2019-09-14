@@ -18,5 +18,5 @@ fn main() {
         canvas.write_pixel(canvas_point.x as u32, canvas_point.y as u32, color);
         clock_position = Matrix::rotation_z(separation_angle) * clock_position;
     }
-    canvas.canvas_to_ppm("analog_clock.ppm".to_string());
+    canvas.save_as_ppm("analog_clock.ppm");
 }

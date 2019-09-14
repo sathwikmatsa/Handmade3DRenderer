@@ -34,5 +34,5 @@ fn main() {
         canvas.write_pixel(i, j, color);
         p = tick(&e, p);
     }
-    canvas.canvas_to_ppm("projectile.ppm".to_string());
+    canvas.save_as_ppm("projectile.ppm");
 }

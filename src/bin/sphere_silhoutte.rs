@@ -26,5 +26,5 @@ fn main() {
             }
         }
     }
-    canvas.canvas_to_ppm("silhoutte_of_sphere.ppm".to_string());
+    canvas.save_as_ppm("silhoutte_of_sphere.ppm");
 }

@@ -14,6 +14,8 @@ pub mod ray;
 pub use ray::*;
 pub mod light;
 pub use light::*;
+pub mod camera;
+pub use camera::*;
 pub mod material;
 pub use material::*;
 pub mod object;
