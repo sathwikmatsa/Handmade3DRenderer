@@ -209,6 +209,21 @@ impl Matrix {
     pub fn shear(&self, xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
         Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
     }
+    pub fn view_transformation(from: Vec3, to: Vec3, up: Vec3) -> Self {
+        let forward = (to - from).normalize();
+        let upnorm = up.normalize();
+        let left = forward.cross(upnorm);
+        let true_up = left.cross(forward);
+
+        let matrix = vec![
+            vec![left.x    , left.y    , left.z    , 0.0],
+            vec![true_up.x , true_up.y , true_up.z , 0.0],
+            vec![-forward.x, -forward.y, -forward.z, 0.0],
+            vec![0.0       , 0.0       , 0.0       , 1.0],
+        ];
+        let orientation = Matrix::new(matrix);
+        orientation * &Matrix::translation(-from.x, -from.y, -from.z)
+    }
 }
 
 impl Index<usize> for Matrix {
@@ -504,5 +519,32 @@ pub mod tests {
         assert_eq!(C * &B.inverse_matrix(), D);
         let AI = D.inverse_matrix();
         assert_eq!(D * &AI, Matrix::identity_matrix(4));
+    }
+    #[test]
+    fn default_orientation() {
+        let t = Matrix::view_transformation(Vec3::point(0, 0, 0), Vec3::point(0, 0, -1), Vec3::vector(0, 1, 0));
+        assert_eq!(t, Matrix::identity_matrix(4));
+    }
+    #[test]
+    fn view_transformation_pos_z() {
+        let t = Matrix::view_transformation(Vec3::point(0, 0, 0), Vec3::point(0, 0, 1), Vec3::vector(0, 1, 0));
+        assert_eq!(t, Matrix::scaling(-1.0, 1.0, -1.0));
+    }
+    #[test]
+    fn view_tranformation_move_world() {
+        let t = Matrix::view_transformation(Vec3::point(0, 0, 8), Vec3::point(0, 0, 0), Vec3::vector(0, 1, 0));
+        assert_eq!(t, Matrix::translation(0.0, 0.0, -8.0));
+    }
+    #[test]
+    fn arbitrary_view_transformation() {
+        let t = Matrix::view_transformation(Vec3::point(1, 3, 2), Vec3::point(4, -2, 8), Vec3::vector(1, 1, 0));
+        let matrix = vec![
+            vec![-0.50709254, 0.50709254, 0.6761234, -2.366432],
+            vec![0.76771593, 0.6060915, 0.12121832, -2.828427],
+            vec![-0.35856858, 0.59761435, -0.71713716, -0.00000023841858],
+            vec![0.0, 0.0, 0.0, 1.0]
+        ];
+        let A = Matrix::new( matrix );
+        assert_eq!(t, A);
     }
 }
