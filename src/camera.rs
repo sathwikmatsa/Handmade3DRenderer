@@ -6,13 +6,21 @@ use super::world::World;
 use std::thread;
 use std::sync::Arc;
 use std::cell::UnsafeCell;
+use std::rc::Rc;
+use std::fmt;
 
-struct Sharable<T> {
+struct LockFreeMutSharable<T> {
     data: UnsafeCell<T>,
 }
 
-unsafe impl<T> Sync for Sharable<T> {}
-unsafe impl<T> Send for Sharable<T> {}
+unsafe impl<T> Sync for LockFreeMutSharable<T> {}
+unsafe impl<T> Send for LockFreeMutSharable<T> {}
+
+impl<T> fmt::Debug for LockFreeMutSharable<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Something wrong with LockFreeMutSharable")
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct Camera {
@@ -68,11 +76,11 @@ impl Camera {
         }
         image
     }
-    pub fn par_render(&self, world: &'static World, nthreads: u32, filename: &str) {
+    pub fn par_render(&self, world: Rc<World>, nthreads: u32) -> Canvas {
         let mut handles = Vec::new();
         let image = Canvas::new(self.hsize, self.vsize);
-        let shared_image = Arc::new(Sharable { data: UnsafeCell::new(image) });
-        let shared_world = Arc::new(Sharable { data: UnsafeCell::new(world) });
+        let shared_image = Arc::new(LockFreeMutSharable { data: UnsafeCell::new(image) });
+        let shared_world = Arc::new(LockFreeMutSharable { data: UnsafeCell::new(world) });
         let camera = self.clone();
         let shared_camera = Arc::new(camera);
         for i in 0..nthreads {
@@ -93,7 +101,8 @@ impl Camera {
         for handle in handles {
             handle.join().unwrap();
         }
-        unsafe {(*shared_image.data.get()).save_as_ppm(filename)}
+
+        Arc::try_unwrap(shared_image).expect("unable to unwrap Arc - shared_image (canvas)").data.into_inner()
     }
 }
 
