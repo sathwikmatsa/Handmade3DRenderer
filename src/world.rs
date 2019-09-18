@@ -13,6 +13,8 @@ pub struct World {
     pub lights: Vec<Light>,
 }
 
+unsafe impl Sync for World {}
+
 impl World {
     pub fn new() -> Self {
         World {

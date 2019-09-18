@@ -22,7 +22,7 @@ fn main() {
             let ray = Ray::new(ray_origin, (point_on_wall - ray_origin).normalize());
             let xs : Intersections = ray.intersect(&shape);
             if xs.len() != 0 {
-                canvas.write_pixel(row, col, color);
+                canvas.set_pixel(row, col, color);
             }
         }
     }

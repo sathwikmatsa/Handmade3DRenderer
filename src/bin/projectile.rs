@@ -31,7 +31,7 @@ fn main() {
     while p.position.y > 0.0 {
         let i = canvas.height - p.position.y as u32;
         let j = p.position.x as u32;
-        canvas.write_pixel(i, j, color);
+        canvas.set_pixel(i, j, color);
         p = tick(&e, p);
     }
     canvas.save_as_ppm("projectile.ppm");

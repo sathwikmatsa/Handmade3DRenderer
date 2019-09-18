@@ -15,7 +15,7 @@ fn main() {
     for _ in 0..12 {
         // translate origin to center of canvas
         let canvas_point = Matrix::translation(width as f32 / 2.0, height as f32 / 2.0 , 0.0) * clock_position;
-        canvas.write_pixel(canvas_point.x as u32, canvas_point.y as u32, color);
+        canvas.set_pixel(canvas_point.x as u32, canvas_point.y as u32, color);
         clock_position = Matrix::rotation_z(separation_angle) * clock_position;
     }
     canvas.save_as_ppm("analog_clock.ppm");

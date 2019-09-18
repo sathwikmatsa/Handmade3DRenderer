@@ -27,7 +27,7 @@ fn main() {
                 let eye_v = -ray.direction;
                 let normal_v = shape.normal_at(point);
                 let color = shape.lighting_at(point, eye_v, normal_v, light);
-                canvas.write_pixel(row, col, color);
+                canvas.set_pixel(row, col, color);
             }
         }
     }
