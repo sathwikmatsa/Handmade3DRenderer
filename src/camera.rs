@@ -3,24 +3,9 @@ use super::ray::Ray;
 use super::vec3::Vec3;
 use super::canvas::Canvas;
 use super::world::World;
-use std::thread;
-use std::sync::Arc;
-use std::cell::UnsafeCell;
-use std::rc::Rc;
-use std::fmt;
 
-struct LockFreeMutSharable<T> {
-    data: UnsafeCell<T>,
-}
-
-unsafe impl<T> Sync for LockFreeMutSharable<T> {}
-unsafe impl<T> Send for LockFreeMutSharable<T> {}
-
-impl<T> fmt::Debug for LockFreeMutSharable<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Something wrong with LockFreeMutSharable")
-    }
-}
+extern crate rayon;
+use rayon::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Camera {
@@ -65,44 +50,18 @@ impl Camera {
         Ray::new(origin, direction)
     }
     pub fn render(&self, world: &World) -> Canvas {
-        let mut image = Canvas::new(self.hsize, self.vsize);
+        let mut canvas = Canvas::new(self.hsize, self.vsize);
 
-        for y in 0..self.vsize {
-            for x in 0..self.hsize {
-                let ray = self.ray_for_pixel(x, y);
-                let color = world.color_at(&ray);
-                image.write_pixel(y, x, color);
-            }
-        }
-        image
-    }
-    pub fn par_render(&self, world: Rc<World>, nthreads: u32) -> Canvas {
-        let mut handles = Vec::new();
-        let image = Canvas::new(self.hsize, self.vsize);
-        let shared_image = Arc::new(LockFreeMutSharable { data: UnsafeCell::new(image) });
-        let shared_world = Arc::new(LockFreeMutSharable { data: UnsafeCell::new(world) });
-        let camera = self.clone();
-        let shared_camera = Arc::new(camera);
-        for i in 0..nthreads {
-            let image = shared_image.clone();
-            let world = shared_world.clone();
-            let camera = shared_camera.clone();
-            handles.push(thread::spawn(move || {
-                for y in i * (*camera).vsize/nthreads..(i+1) * (*camera).vsize/nthreads {
-                    for x in 0..(*camera).hsize {
-                        let ray = (*camera).ray_for_pixel(x, y);
-                        let color;
-                        unsafe {color = (*world.data.get()).color_at(&ray);}
-                        unsafe {(*image.data.get()).write_pixel(y, x, color);}
-                    }
-                }
-            }));
-        }
-        for handle in handles {
-            handle.join().unwrap();
-        }
+        canvas.grid.par_iter_mut()
+                   .enumerate()
+                   .for_each(|(index, color)| {
+                       let x = index as u32 / self.hsize;
+                       let y = index as u32 % self.hsize;
+                       let ray = self.ray_for_pixel(x, y);
+                       *color = world.color_at(&ray);
+                   });
 
-        Arc::try_unwrap(shared_image).expect("unable to unwrap Arc - shared_image (canvas)").data.into_inner()
+        canvas
     }
 }
 

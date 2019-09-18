@@ -2,7 +2,6 @@
 
 extern crate Handmade3DRenderer;
 use Handmade3DRenderer::*;
-use std::rc::Rc;
 
 fn main() {
     let mut world = World::new();
@@ -60,8 +59,6 @@ fn main() {
                         Vec3::point(0, 1, 0),
                         Vec3::vector(0, 1, 0),
     );
-    let world = Rc::new(world);
-    let world_p = Rc::clone(&world);
-    let canvas = camera.par_render(world_p, 4);
-    canvas.save_as_ppm("scene_par.ppm");
+    let canvas = camera.render(&world);
+    canvas.save_as_ppm("scene_rayon_par.ppm");
 }

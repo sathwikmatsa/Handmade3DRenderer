@@ -60,5 +60,5 @@ fn main() {
                         Vec3::vector(0, 1, 0),
     );
     let canvas = camera.render(&world);
-    canvas.save_as_ppm("scene.ppm");
+    canvas.save_as_ppm("scene_rayon_par.ppm");
 }
