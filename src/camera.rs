@@ -57,7 +57,7 @@ impl Camera {
                    .for_each(|(index, color)| {
                        let x = index as u32 / self.hsize;
                        let y = index as u32 % self.hsize;
-                       let ray = self.ray_for_pixel(x, y);
+                       let ray = self.ray_for_pixel(y, x);
                        *color = world.color_at(&ray);
                    });
 

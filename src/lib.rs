@@ -24,5 +24,7 @@ pub mod intersection;
 pub use intersection::*;
 pub mod sphere;
 pub use sphere::*;
+pub mod plane;
+pub use plane::*;
 pub mod float_cmp;
 pub use float_cmp::*;

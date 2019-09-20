@@ -7,25 +7,6 @@ fn main() {
     let mut world = World::new();
     world.lights.push(Light::new(Vec3::point(-10, 10, -10), Color::new(1.0, 1.0, 1.0)));
 
-    let mut floor = Sphere::new();
-    floor.transform = Matrix::scaling(10.0, 0.01, 10.0);
-    floor.material.color = Color::new(1.0, 0.9, 0.9);
-    floor.material.specular = 0.0;
-
-    let mut left_wall = Sphere::new();
-    left_wall.transform = Matrix::translation(0.0, 0.0, 5.0)*
-                            &Matrix::rotation_y(-std::f32::consts::PI/4.0)*
-                            &Matrix::rotation_x(std::f32::consts::PI/2.0)*
-                            &Matrix::scaling(10.0, 0.01, 10.0);
-    left_wall.material = floor.material;
-
-    let mut right_wall = Sphere::new();
-    right_wall.transform = Matrix::translation(0.0, 0.0, 5.0)*
-                            &Matrix::rotation_y(std::f32::consts::PI/4.0)*
-                            &Matrix::rotation_x(std::f32::consts::PI/2.0)*
-                            &Matrix::scaling(10.0, 0.01, 10.0);
-    right_wall.material = floor.material;
-
     let mut middle_sphere = Sphere::new();
     middle_sphere.transform = Matrix::translation(-0.5, 1.0, 0.5);
     middle_sphere.material.color = Color::new(0.1, 1.0, 0.5);
@@ -46,9 +27,9 @@ fn main() {
     right_sphere.material.diffuse = 0.7;
     right_sphere.material.specular = 0.3;
 
-    world.objects.insert(floor.get_id(), Box::new(floor));
-    world.objects.insert(left_wall.get_id(), Box::new(left_wall));
-    world.objects.insert(right_wall.get_id(), Box::new(right_wall));
+    let plane = Plane::new();
+
+    world.objects.insert(plane.get_id(), Box::new(plane));
     world.objects.insert(left_sphere.get_id(), Box::new(left_sphere));
     world.objects.insert(middle_sphere.get_id(), Box::new(middle_sphere));
     world.objects.insert(right_sphere.get_id(), Box::new(right_sphere));

@@ -61,7 +61,8 @@ impl World {
         }
 
         let point = ray.position(intersection.t);
-        let over_point = point + normalv * EPSILON;
+        // required to prevent intersection to be treated as shadow
+        let over_point = point + normalv * 15.0 * EPSILON;
 
         IntersectionState {
             t: intersection.t,
