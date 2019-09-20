@@ -30,3 +30,10 @@ A simple 3D renderer implemented in Rust using Whitted ray tracing technique. [W
 
 
 ![3d scene](https://user-images.githubusercontent.com/30603669/64912047-41e9c500-d747-11e9-97a2-b457867df928.png)
+
+
+
+- 3D Scene with shadows
+
+
+![3d scene with shadows](https://user-images.githubusercontent.com/30603669/65323142-3b839f00-dbc6-11e9-888e-6413eb44b4cb.png)
