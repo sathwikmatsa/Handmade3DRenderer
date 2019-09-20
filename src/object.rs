@@ -12,6 +12,6 @@ pub fn get_object_uid() -> usize { unsafe {ID.fetch_add(1, atomic::Ordering::Seq
 pub trait Object {
     fn intersection(&self, ray: &Ray) -> Intersections;
     fn normal_at(&self, point: Vec3) -> Vec3;
-    fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light) -> Color;
+    fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light, in_shadow: bool) -> Color;
 }
 

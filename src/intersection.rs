@@ -8,6 +8,7 @@ pub struct IntersectionState {
     pub t: f32,
     pub obj_id: usize,
     pub point: Vec3,
+    pub over_point: Vec3,
     pub eyev: Vec3,
     pub normalv: Vec3,
     pub inside: bool,

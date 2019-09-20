@@ -7,6 +7,7 @@ use super::color::Color;
 use super::matrix::Matrix;
 use super::ray::Ray;
 use super::intersection::*;
+use super::float_cmp::EPSILON;
 
 pub struct World {
     pub objects: HashMap<usize, Box<Object>>,
@@ -58,10 +59,15 @@ impl World {
         } else {
             inside = false;
         }
+
+        let point = ray.position(intersection.t);
+        let over_point = point + normalv * EPSILON;
+
         IntersectionState {
             t: intersection.t,
             obj_id: intersection.obj_id,
-            point: ray.position(intersection.t),
+            point: point,
+            over_point: over_point,
             eyev: eyev,
             normalv: normalv,
             inside: inside,
@@ -69,9 +75,10 @@ impl World {
     }
     pub fn shade_hit(&self, state: IntersectionState) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
-        for light in self.lights.iter() {
+        for (light_index, light) in self.lights.iter().enumerate() {
+            let in_shadow = self.is_shadowed(state.over_point, light_index);
             color = color + self.objects.get(&state.obj_id).unwrap()
-                        .lighting_at(state.point, state.eyev, state.normalv, *light)
+                        .lighting_at(state.point, state.eyev, state.normalv, *light, in_shadow)
         }
         color
     }
@@ -83,6 +90,21 @@ impl World {
         } else {
             Color::new(0.0, 0.0, 0.0)
         }
+    }
+    pub fn is_shadowed(&self, point: Vec3, light_index: usize) -> bool {
+        let point_to_light = self.lights[light_index].position - point;
+        let distance = point_to_light.magnitude();
+        let direction = point_to_light.normalize();
+
+        let ray = Ray::new(point, direction);
+        let xs = self.intersect_with(&ray);
+
+        if let Some(hit) = xs.hit() {
+            if hit.t < distance {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -196,5 +218,58 @@ pub mod tests {
         world.objects.insert(id2, Box::new(s2));
         let ray = Ray::new(Vec3::point(0.0, 0.0, 0.75), Vec3::vector(0, 0, -1));
         assert!(world.color_at(&ray).equals(Color::new(1.0, 1.0, 1.0)));
+    }
+    #[test]
+    fn not_collinear_no_shadow() {
+        let world = World::default();
+        let p = Vec3::point(0, 10, 0);
+        assert_eq!(world.is_shadowed(p, 0), false);
+    }
+    #[test]
+    fn obj_between_point_and_light() {
+        let world = World::default();
+        let p = Vec3::point(10, 10, 10);
+        assert_eq!(world.is_shadowed(p, 0), true);
+    }
+    #[test]
+    fn obj_behind_light() {
+        let world = World::default();
+        let p = Vec3::point(-20, 20, -20);
+        assert_eq!(world.is_shadowed(p, 0), false);
+    }
+    #[test]
+    fn obj_behind_point() {
+        let world = World::default();
+        let p = Vec3::point(-2, 2, -2);
+        assert_eq!(world.is_shadowed(p, 0), false);
+    }
+    #[test]
+    fn shade_hit_intersection() {
+        let mut world = World::new();
+        world.lights.push(Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0)));
+        let s1 = Sphere::new();
+        let mut s2 = Sphere::new();
+        s2.transform = Matrix::translation(0.0, 0.0, 10.0);
+        let s2_id = s2.get_id();
+        world.objects.insert(s1.get_id(), Box::new(s1));
+        world.objects.insert(s2.get_id(), Box::new(s2));
+        let ray = Ray::new(Vec3::point(0, 0, 5), Vec3::vector(0, 0, 1));
+        let xs = Intersection::new(4.0, s2_id);
+        let comps = world.compute_state(&ray, &xs);
+        let color = world.shade_hit(comps);
+        assert_eq!(color, Color::new(0.1, 0.1, 0.1));
+    }
+    #[test]
+    fn hit_should_offset_point() {
+        let mut world = World::new();
+        let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
+        let mut shape = Sphere::new();
+        shape.transform = Matrix::translation(0.0, 0.0, 1.0);
+        let shape_id = shape.get_id();
+        world.objects.insert(shape_id, Box::new(shape));
+        let xs = Intersection::new(5.0, shape_id);
+        let comps = world.compute_state(&ray, &xs);
+        assert!(comps.over_point.z < -EPSILON/2.0);
+        assert!(comps.point.z > comps.over_point.z);
     }
 }

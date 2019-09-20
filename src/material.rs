@@ -29,7 +29,7 @@ impl Material {
         assert!((10.0 <= shininess) && (shininess <= 200.0), "shininess value is out of bounds");
         Self {color, ambient, diffuse, specular, shininess}
     }
-    pub fn lighting(&self, light: Light, point: Vec3, eye_v: Vec3, normal_v: Vec3) -> Color {
+    pub fn lighting(&self, light: Light, point: Vec3, eye_v: Vec3, normal_v: Vec3, in_shadow: bool) -> Color {
         let effective_color = self.color * light.intensity;
         let light_v = (light.position - point).normalize();
         let ambient = effective_color * self.ambient;
@@ -40,7 +40,7 @@ impl Material {
         // A negative number means the light is on the other side of the surface.
         let light_dot_normal = light_v.dot(normal_v);
 
-        if light_dot_normal < 0.0 {
+        if light_dot_normal < 0.0 || in_shadow {
             diffuse = Color::new(0.0, 0.0, 0.0);
             specular = Color::new(0.0, 0.0, 0.0);
         } else {
@@ -79,7 +79,7 @@ pub mod tests {
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(light, position, eyev, normalv);
+        let result = m.lighting(light, position, eyev, normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
     #[test]
@@ -89,7 +89,7 @@ pub mod tests {
         let eyev = Vec3::vector(0.0, f32::sqrt(2.0)/2.0, -1.0*f32::sqrt(2.0)/2.0);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(light, position, eyev, normalv);
+        let result = m.lighting(light, position, eyev, normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
     #[test]
@@ -99,7 +99,7 @@ pub mod tests {
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 10, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(light, position, eyev, normalv);
+        let result = m.lighting(light, position, eyev, normalv, false);
         assert_eq!(result, Color::new(0.7363961, 0.7363961, 0.7363961));
     }
     #[test]
@@ -109,7 +109,7 @@ pub mod tests {
         let eyev = Vec3::vector(0.0, -1.0*f32::sqrt(2.0)/2.0, -1.0*f32::sqrt(2.0)/2.0);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 10, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(light, position, eyev, normalv);
+        let result = m.lighting(light, position, eyev, normalv, false);
         assert_eq!(result, Color::new(1.6363853, 1.6363853, 1.6363853));
     }
     #[test]
@@ -119,8 +119,18 @@ pub mod tests {
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, 10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(light, position, eyev, normalv);
+        let result = m.lighting(light, position, eyev, normalv, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
-
+    #[test]
+    fn lighting_with_surface_in_shadow() {
+        let m = Material::default();
+        let position = Vec3::point(0, 0, 0);
+        let eyev = Vec3::vector(0, 0, -1);
+        let normalv = Vec3::vector(0, 0, -1);
+        let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
+        let in_shadow = true;
+        let result = m.lighting(light, position, eyev, normalv, in_shadow);
+        assert_eq!(result, Color::new(0.1, 0.1, 0.1));
+    }
 }

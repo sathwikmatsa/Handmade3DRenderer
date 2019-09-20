@@ -46,7 +46,7 @@ fn main() {
                         let point = ray.position(x.t);
                         let eye_v = -ray.direction;
                         let normal_v = sphere.normal_at(point);
-                        let color = sphere.lighting_at(point, eye_v, normal_v, light);
+                        let color = sphere.lighting_at(point, eye_v, normal_v, light, false);
                         unsafe {(*canvas.data.get()).set_pixel(row, col, color);}
                     }
                 }
