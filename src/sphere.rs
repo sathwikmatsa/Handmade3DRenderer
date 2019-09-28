@@ -7,7 +7,7 @@ use super::ray::*;
 use super::object::*;
 use super::intersection::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Sphere {
     id: usize,
     pub transform: Matrix,

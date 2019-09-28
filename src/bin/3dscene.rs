@@ -17,14 +17,14 @@ fn main() {
                             &Matrix::rotation_y(-std::f32::consts::PI/4.0)*
                             &Matrix::rotation_x(std::f32::consts::PI/2.0)*
                             &Matrix::scaling(10.0, 0.01, 10.0);
-    left_wall.material = floor.material;
+    left_wall.material = floor.material.clone();
 
     let mut right_wall = Sphere::new();
     right_wall.transform = Matrix::translation(0.0, 0.0, 5.0)*
                             &Matrix::rotation_y(std::f32::consts::PI/4.0)*
                             &Matrix::rotation_x(std::f32::consts::PI/2.0)*
                             &Matrix::scaling(10.0, 0.01, 10.0);
-    right_wall.material = floor.material;
+    right_wall.material = floor.material.clone();
 
     let mut middle_sphere = Sphere::new();
     middle_sphere.transform = Matrix::translation(-0.5, 1.0, 0.5);

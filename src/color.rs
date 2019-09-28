@@ -7,6 +7,10 @@ pub struct Color {
     pub blue: f32,
 }
 
+// predefined constants
+pub const BLACK : Color = Color {red: 0.0, green: 0.0, blue: 0.0};
+pub const WHITE : Color = Color {red: 1.0, green: 1.0, blue: 1.0};
+
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
         Self {

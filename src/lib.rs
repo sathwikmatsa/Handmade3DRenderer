@@ -22,6 +22,8 @@ pub mod object;
 pub use object::*;
 pub mod intersection;
 pub use intersection::*;
+pub mod pattern;
+pub use pattern::*;
 pub mod sphere;
 pub use sphere::*;
 pub mod plane;
