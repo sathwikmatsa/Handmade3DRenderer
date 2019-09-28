@@ -37,7 +37,7 @@ impl Object for Plane {
     }
     fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light, in_shadow: bool) -> Color {
         let eye_v = eye_v.normalize();
-        self.material.lighting(light, point, eye_v, normal_v, in_shadow)
+        self.material.lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
     }
 }
 

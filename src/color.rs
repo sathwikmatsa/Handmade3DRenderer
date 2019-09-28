@@ -10,6 +10,14 @@ pub struct Color {
 // predefined constants
 pub const BLACK : Color = Color {red: 0.0, green: 0.0, blue: 0.0};
 pub const WHITE : Color = Color {red: 1.0, green: 1.0, blue: 1.0};
+pub const GREY : Color = Color {red: 0.5, green: 0.5, blue: 0.5};
+pub const RED : Color = Color {red: 1.0, green: 0.0, blue: 0.0};
+pub const GREEN : Color = Color {red: 0.0, green: 1.0, blue: 0.0};
+pub const BLUE : Color = Color {red: 0.0, green: 0.0, blue: 1.0};
+pub const YELLOW : Color = Color {red: 1.0, green: 1.0, blue: 0.0};
+pub const PINK : Color = Color {red: 1.0, green: 0.0, blue: 1.0};
+pub const CYAN : Color = Color {red: 0.0, green: 1.0, blue: 1.0};
+pub const ORANGE : Color = Color {red: 1.0, green: 0.5, blue: 0.0};
 
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {

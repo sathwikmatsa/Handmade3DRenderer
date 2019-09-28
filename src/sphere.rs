@@ -40,7 +40,7 @@ impl Object for Sphere {
     }
     fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light, in_shadow: bool) -> Color {
         let eye_v = eye_v.normalize();
-        self.material.lighting(light, point, eye_v, normal_v, in_shadow)
+        self.material.lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
     }
 }
 
@@ -75,6 +75,7 @@ impl PartialEq for Sphere {
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use super::super::float_cmp;
     #[test]
     fn create_spheres() {
         let s1 = Sphere::new();
@@ -143,11 +144,23 @@ pub mod tests {
     #[test]
     fn sphere_material() {
         let mut s = Sphere::new();
-        assert_eq!(s.material, Material::default());
+        let def_mat = Material::default();
+
+        assert_eq!(s.material.color, def_mat.color);
+        assert!(float_cmp::equal(s.material.ambient, def_mat.ambient));
+        assert!(float_cmp::equal(s.material.specular, def_mat.specular));
+        assert!(float_cmp::equal(s.material.diffuse, def_mat.diffuse));
+        assert!(float_cmp::equal(s.material.shininess, def_mat.shininess));
+
         let mut material = Material::default();
         material.shininess = 150.0;
         let mat_c = material.clone();
         s.set_material(material);
-        assert_eq!(s.material, mat_c);
+
+        assert_eq!(s.material.color, mat_c.color);
+        assert!(float_cmp::equal(s.material.ambient, mat_c.ambient));
+        assert!(float_cmp::equal(s.material.specular, mat_c.specular));
+        assert!(float_cmp::equal(s.material.diffuse, mat_c.diffuse));
+        assert!(float_cmp::equal(s.material.shininess, mat_c.shininess));
     }
 }
