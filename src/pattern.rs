@@ -1,6 +1,7 @@
 use super::color::*;
 use super::matrix::Matrix;
 use super::vec3::*;
+use super::float_cmp;
 use std::fmt;
 
 #[derive(Clone)]
@@ -68,7 +69,15 @@ impl Pattern {
     pub fn checkers(colors: Vec<Color>) -> Self {
         fn checkers_fn(point: Vec3, colors : &Vec<Color>) -> Color {
             let n = colors.len();
-            colors[(point.x.floor() + point.y.floor() + point.z.floor()) as usize % n]
+            let mut p = point;
+            if float_cmp::equal(p.x, 0.0) {p.x = 0.0;}
+            if float_cmp::equal(p.y, 0.0) {p.y = 0.0;}
+            if float_cmp::equal(p.z, 0.0) {p.z = 0.0;}
+            // sometimes zero is interpreted as -0.00000011920929
+            // which on floor operation gives -1 which is clearly not desirable
+            // hence manually checking for apparent zero value with lesser precision than f32::EPSILON
+            // and setting it to zero
+            colors[(p.x.floor() + p.y.floor() + p.z.floor()) as usize % n]
         }
         Self {
             colors: colors,
