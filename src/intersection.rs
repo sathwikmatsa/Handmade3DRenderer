@@ -1,7 +1,10 @@
 use std::cmp::Ordering;
 use super::float_cmp;
 use super::vec3::Vec3;
+use super::ray::Ray;
+use super::world::World;
 use std::ops::{Index};
+use super::float_cmp::EPSILON;
 
 #[derive(Debug)]
 pub struct IntersectionState {
@@ -11,6 +14,7 @@ pub struct IntersectionState {
     pub over_point: Vec3,
     pub eyev: Vec3,
     pub normalv: Vec3,
+    pub reflectv: Vec3,
     pub inside: bool,
 }
 
@@ -24,6 +28,37 @@ impl Intersection {
     pub fn new(t: f32, obj_id: usize) -> Intersection {
         Self {t, obj_id}
     }
+    pub fn compute_state(&self, ray: &Ray, world: &World) -> IntersectionState {
+        let point = ray.position(self.t);
+        let mut normalv = world.objects.get(&self.obj_id)
+                        .unwrap().normal_at(point);
+        let eyev = -ray.direction;
+        let reflectv = ray.direction.reflect(normalv);
+        // checking for ray originating from inside the object
+        let inside;
+        if normalv.dot(eyev) < 0.0 {
+            inside = true;
+            normalv = -normalv;
+        } else {
+            inside = false;
+        }
+
+        let point = ray.position(self.t);
+        // required to prevent intersection to be treated as shadow
+        let over_point = point + normalv * 15.0 * EPSILON;
+
+        IntersectionState {
+            t: self.t,
+            obj_id: self.obj_id,
+            point: point,
+            over_point: over_point,
+            eyev: eyev,
+            normalv: normalv,
+            reflectv: reflectv,
+            inside: inside,
+        }
+    }
+
 }
 
 impl Eq for Intersection {}
@@ -90,6 +125,7 @@ impl Index<usize> for Intersections {
 pub mod tests {
     use super::*;
     use super::super::sphere::Sphere;
+    use super::super::matrix::Matrix;
 
     #[test]
     fn create_intersection_object() {
@@ -97,6 +133,51 @@ pub mod tests {
         let intersection = Intersection::new(1.0, sphere.get_id());
         assert_eq!(intersection.t, 1.0);
         assert_eq!(intersection.obj_id, sphere.get_id());
+    }
+    #[test]
+    fn precompute_intersection_state() {
+        let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
+        let sphere = Sphere::new();
+        let id = sphere.get_id();
+        let mut world = World::new();
+        world.objects.insert(id, Box::new(sphere));
+        let intersection = Intersection::new(4.0, id);
+        let state = intersection.compute_state(&ray, &world);
+        assert_eq!(state.t, intersection.t);
+        assert_eq!(state.obj_id, intersection.obj_id);
+        assert_eq!(state.point, Vec3::point(0, 0, -1));
+        assert_eq!(state.eyev, Vec3::vector(0, 0, -1));
+        assert_eq!(state.normalv, Vec3::vector(0, 0, -1));
+        assert_eq!(state.inside, false);
+    }
+    #[test]
+    fn compute_state_of_hit_inside_object() {
+        let ray = Ray::new(Vec3::point(0, 0, 0), Vec3::vector(0, 0, 1));
+        let sphere = Sphere::new();
+        let id = sphere.get_id();
+        let mut world = World::new();
+        world.objects.insert(id, Box::new(sphere));
+        let intersection = Intersection::new(1.0, id);
+        let state = intersection.compute_state(&ray, &world);
+        assert_eq!(state.t, intersection.t);
+        assert_eq!(state.obj_id, intersection.obj_id);
+        assert_eq!(state.point, Vec3::point(0, 0, 1));
+        assert_eq!(state.eyev, Vec3::vector(0, 0, -1));
+        assert_eq!(state.normalv, Vec3::vector(0, 0, -1));
+        assert_eq!(state.inside, true);
+    }
+    #[test]
+    fn hit_should_offset_point() {
+        let mut world = World::new();
+        let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
+        let mut shape = Sphere::new();
+        shape.transform = Matrix::translation(0.0, 0.0, 1.0);
+        let shape_id = shape.get_id();
+        world.objects.insert(shape_id, Box::new(shape));
+        let xs = Intersection::new(5.0, shape_id);
+        let comps = xs.compute_state(&ray, &world);
+        assert!(comps.over_point.z < -EPSILON/2.0);
+        assert!(comps.point.z > comps.over_point.z);
     }
 }
 

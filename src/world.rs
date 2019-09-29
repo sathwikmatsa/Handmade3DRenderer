@@ -7,7 +7,6 @@ use super::color::Color;
 use super::matrix::Matrix;
 use super::ray::Ray;
 use super::intersection::*;
-use super::float_cmp::EPSILON;
 
 pub struct World {
     pub objects: HashMap<usize, Box<Object>>,
@@ -46,34 +45,6 @@ impl World {
         intersections.crossings.sort();
         intersections
     }
-    pub fn compute_state(&self, ray: &Ray, intersection: &Intersection) -> IntersectionState {
-        let point = ray.position(intersection.t);
-        let mut normalv = self.objects.get(&intersection.obj_id)
-                        .unwrap().normal_at(point);
-        let eyev = -ray.direction;
-        // checking for ray originating from inside the object
-        let inside;
-        if normalv.dot(eyev) < 0.0 {
-            inside = true;
-            normalv = -normalv;
-        } else {
-            inside = false;
-        }
-
-        let point = ray.position(intersection.t);
-        // required to prevent intersection to be treated as shadow
-        let over_point = point + normalv * 15.0 * EPSILON;
-
-        IntersectionState {
-            t: intersection.t,
-            obj_id: intersection.obj_id,
-            point: point,
-            over_point: over_point,
-            eyev: eyev,
-            normalv: normalv,
-            inside: inside,
-        }
-    }
     pub fn shade_hit(&self, state: IntersectionState) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
         for (light_index, light) in self.lights.iter().enumerate() {
@@ -86,7 +57,7 @@ impl World {
     pub fn color_at(&self, ray: &Ray) -> Color {
         let xs = self.intersect_with(&ray);
         if let Some(x) = xs.hit() {
-           let state = self.compute_state(&ray, &x);
+           let state = x.compute_state(&ray, self);
            self.shade_hit(state)
         } else {
             Color::new(0.0, 0.0, 0.0)
@@ -113,6 +84,7 @@ impl World {
 pub mod tests {
     use super::*;
     use super::super::float_cmp;
+
     #[test]
     fn create_world() {
         let world = World::new();
@@ -137,44 +109,12 @@ pub mod tests {
         assert!(float_cmp::equal(xs[3].t, 6.0));
     }
     #[test]
-    fn precompute_intersection_state() {
-        let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
-        let sphere = Sphere::new();
-        let id = sphere.get_id();
-        let mut world = World::new();
-        world.objects.insert(id, Box::new(sphere));
-        let intersection = Intersection::new(4.0, id);
-        let state = world.compute_state(&ray, &intersection);
-        assert_eq!(state.t, intersection.t);
-        assert_eq!(state.obj_id, intersection.obj_id);
-        assert_eq!(state.point, Vec3::point(0, 0, -1));
-        assert_eq!(state.eyev, Vec3::vector(0, 0, -1));
-        assert_eq!(state.normalv, Vec3::vector(0, 0, -1));
-        assert_eq!(state.inside, false);
-    }
-    #[test]
-    fn compute_state_of_hit_inside_object() {
-        let ray = Ray::new(Vec3::point(0, 0, 0), Vec3::vector(0, 0, 1));
-        let sphere = Sphere::new();
-        let id = sphere.get_id();
-        let mut world = World::new();
-        world.objects.insert(id, Box::new(sphere));
-        let intersection = Intersection::new(1.0, id);
-        let state = world.compute_state(&ray, &intersection);
-        assert_eq!(state.t, intersection.t);
-        assert_eq!(state.obj_id, intersection.obj_id);
-        assert_eq!(state.point, Vec3::point(0, 0, 1));
-        assert_eq!(state.eyev, Vec3::vector(0, 0, -1));
-        assert_eq!(state.normalv, Vec3::vector(0, 0, -1));
-        assert_eq!(state.inside, true);
-    }
-    #[test]
     fn shading_intersection() {
         let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
         let world = World::default();
         let id = world.objects.keys().min().unwrap();
         let intersection = Intersection::new(4.0, *id);
-        let state = world.compute_state(&ray, &intersection);
+        let state = intersection.compute_state(&ray, &world);
         let color = world.shade_hit(state);
         assert!(color.equals(Color::new(0.38066, 0.47582, 0.28549)));
     }
@@ -185,7 +125,7 @@ pub mod tests {
         world.lights[0] = Light::new(Vec3::point(0.0, 0.25, 0.0), Color::new(1.0, 1.0, 1.0));
         let id = world.objects.keys().max().unwrap();
         let intersection = Intersection::new(0.5, *id);
-        let state = world.compute_state(&ray, &intersection);
+        let state = intersection.compute_state(&ray, &world);
         let color = world.shade_hit(state);
         assert!(color.equals(Color::new(0.90498, 0.90498, 0.90498)));
     }
@@ -256,21 +196,8 @@ pub mod tests {
         world.objects.insert(s2.get_id(), Box::new(s2));
         let ray = Ray::new(Vec3::point(0, 0, 5), Vec3::vector(0, 0, 1));
         let xs = Intersection::new(4.0, s2_id);
-        let comps = world.compute_state(&ray, &xs);
+        let comps = xs.compute_state(&ray, &world);
         let color = world.shade_hit(comps);
         assert_eq!(color, Color::new(0.1, 0.1, 0.1));
-    }
-    #[test]
-    fn hit_should_offset_point() {
-        let mut world = World::new();
-        let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
-        let mut shape = Sphere::new();
-        shape.transform = Matrix::translation(0.0, 0.0, 1.0);
-        let shape_id = shape.get_id();
-        world.objects.insert(shape_id, Box::new(shape));
-        let xs = Intersection::new(5.0, shape_id);
-        let comps = world.compute_state(&ray, &xs);
-        assert!(comps.over_point.z < -EPSILON/2.0);
-        assert!(comps.point.z > comps.over_point.z);
     }
 }
