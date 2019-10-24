@@ -1,6 +1,6 @@
-use std::ops::{Index, Mul};
 use super::float_cmp;
 use super::vec3::Vec3;
+use std::ops::{Index, Mul};
 
 #[derive(Debug, Clone)]
 pub struct Matrix {
@@ -91,7 +91,10 @@ impl Matrix {
         Matrix::new(self.columns())
     }
     pub fn determinant(&self) -> f32 {
-        assert_eq!(self.n_rows, self.n_cols, "can't computer determinant for non square matrix");
+        assert_eq!(
+            self.n_rows, self.n_cols,
+            "can't computer determinant for non square matrix"
+        );
         if (self.n_rows == 2) && (self.n_cols == 2) {
             self.cells[0][0] * self.cells[1][1] - self.cells[0][1] * self.cells[1][0]
         } else {
@@ -103,13 +106,20 @@ impl Matrix {
         }
     }
     pub fn sub_matrix(&self, row: usize, col: usize) -> Self {
-        assert!((row < self.n_rows) && (col < self.n_cols), "submatrix arguments overflow matrix dimensions");
+        assert!(
+            (row < self.n_rows) && (col < self.n_cols),
+            "submatrix arguments overflow matrix dimensions"
+        );
         let mut matrix = Vec::new();
         for i in 0..self.n_rows {
-            if i == row { continue; }
+            if i == row {
+                continue;
+            }
             let mut row_vector = Vec::new();
             for j in 0..self.n_cols {
-                if j == col { continue; }
+                if j == col {
+                    continue;
+                }
                 row_vector.push(self.cells[i][j]);
             }
             matrix.push(row_vector);
@@ -126,7 +136,11 @@ impl Matrix {
     }
     pub fn cofactor(&self, row: usize, col: usize) -> f32 {
         let sign;
-        if (row + col) % 2 == 1 {sign = -1.0;} else {sign = 1.0;}
+        if (row + col) % 2 == 1 {
+            sign = -1.0;
+        } else {
+            sign = 1.0;
+        }
         sign * self.minor(row, col)
     }
     pub fn is_invertible(&self) -> bool {
@@ -216,10 +230,10 @@ impl Matrix {
         let true_up = left.cross(forward);
 
         let matrix = vec![
-            vec![left.x    , left.y    , left.z    , 0.0],
-            vec![true_up.x , true_up.y , true_up.z , 0.0],
+            vec![left.x, left.y, left.z, 0.0],
+            vec![true_up.x, true_up.y, true_up.z, 0.0],
             vec![-forward.x, -forward.y, -forward.z, 0.0],
-            vec![0.0       , 0.0       , 0.0       , 1.0],
+            vec![0.0, 0.0, 0.0, 1.0],
         ];
         let orientation = Matrix::new(matrix);
         orientation * &Matrix::translation(-from.x, -from.y, -from.z)
@@ -338,7 +352,7 @@ pub mod tests {
         let row3 = vec![0.0, 0.0, 0.0, 0.0];
         let row4 = vec![1.0, 1.0, -1.0, -1.0];
         let matrix = vec![row1, row2, row3, row4];
-        let i = Matrix::new( matrix );
+        let i = Matrix::new(matrix);
         assert_eq!(i.cells[0], vec![1.0, 2.0, 3.0, 4.0]);
     }
     #[test]
@@ -375,30 +389,28 @@ pub mod tests {
     }
     #[test]
     fn matrix_multiplication() {
-
         let row1 = vec![1.0, 2.0, 3.0, 4.0];
         let row2 = vec![5.0, 6.0, 7.0, 8.0];
         let row3 = vec![9.0, 8.0, 7.0, 6.0];
         let row4 = vec![5.0, 4.0, 3.0, 2.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         let row1 = vec![-2.0, 1.0, 2.0, 3.0];
         let row2 = vec![3.0, 2.0, 1.0, -1.0];
         let row3 = vec![4.0, 3.0, 6.0, 5.0];
         let row4 = vec![1.0, 2.0, 7.0, 8.0];
         let matrix = vec![row1, row2, row3, row4];
-        let B = Matrix::new( matrix );
+        let B = Matrix::new(matrix);
 
         let row1 = vec![20.0, 22.0, 50.0, 48.0];
         let row2 = vec![44.0, 54.0, 114.0, 108.0];
         let row3 = vec![40.0, 58.0, 110.0, 102.0];
         let row4 = vec![16.0, 26.0, 46.0, 42.0];
         let matrix = vec![row1, row2, row3, row4];
-        let C = Matrix::new( matrix );
+        let C = Matrix::new(matrix);
 
         assert_eq!(C, A * &B);
-
     }
 
     #[test]
@@ -408,9 +420,12 @@ pub mod tests {
         let row3 = vec![8.0, 6.0, 4.0, 1.0];
         let row4 = vec![0.0, 0.0, 0.0, 1.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
-        assert_eq!((A * vec![1.0, 2.0, 3.0, 1.0]).get_tuple(), vec![18.0, 24.0, 33.0, 1.0]);
+        assert_eq!(
+            (A * vec![1.0, 2.0, 3.0, 1.0]).get_tuple(),
+            vec![18.0, 24.0, 33.0, 1.0]
+        );
     }
     #[test]
     fn identity_matrix() {
@@ -419,7 +434,7 @@ pub mod tests {
         let row3 = vec![8.0, 6.0, 4.0, 1.0];
         let row4 = vec![0.0, 0.0, 0.0, 1.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         let I = Matrix::identity_matrix(4usize);
         assert_eq!(I * &A, A);
@@ -431,14 +446,14 @@ pub mod tests {
         let row3 = vec![1.0, 8.0, 5.0, 3.0];
         let row4 = vec![0.0, 0.0, 5.0, 8.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         let row1 = vec![0.0, 9.0, 1.0, 0.0];
         let row2 = vec![9.0, 8.0, 8.0, 0.0];
         let row3 = vec![3.0, 0.0, 5.0, 5.0];
         let row4 = vec![0.0, 8.0, 3.0, 8.0];
         let matrix = vec![row1, row2, row3, row4];
-        let B = Matrix::new( matrix );
+        let B = Matrix::new(matrix);
 
         assert_eq!(A.transpose(), B);
     }
@@ -447,7 +462,7 @@ pub mod tests {
         let row1 = vec![1.0, 5.0];
         let row2 = vec![-3.0, 2.0];
         let matrix = vec![row1, row2];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
         assert!(float_cmp::equal(A.determinant(), 17.0));
     }
     #[test]
@@ -457,13 +472,13 @@ pub mod tests {
         let row3 = vec![1.0, 8.0, 5.0, 3.0];
         let row4 = vec![0.0, 0.0, 5.0, 8.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         let row1 = vec![0.0, 9.0, 3.0];
         let row2 = vec![9.0, 8.0, 0.0];
         let row3 = vec![1.0, 8.0, 5.0];
         let matrix = vec![row1, row2, row3];
-        let B = Matrix::new( matrix );
+        let B = Matrix::new(matrix);
 
         assert_eq!(A.sub_matrix(3, 3), B);
     }
@@ -473,7 +488,7 @@ pub mod tests {
         let row2 = vec![2.0, -1.0, -7.0];
         let row3 = vec![6.0, -1.0, 5.0];
         let matrix = vec![row1, row2, row3];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         assert!(float_cmp::equal(A.minor(1, 0), 25.0));
     }
@@ -483,7 +498,7 @@ pub mod tests {
         let row2 = vec![2.0, -1.0, -7.0];
         let row3 = vec![6.0, -1.0, 5.0];
         let matrix = vec![row1, row2, row3];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         assert!(float_cmp::equal(A.cofactor(1, 0), -25.0));
     }
@@ -494,7 +509,7 @@ pub mod tests {
         let row3 = vec![1.0, 2.0, -9.0, 6.0];
         let row4 = vec![-6.0, 7.0, 7.0, -9.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
         assert!(float_cmp::equal(A.determinant(), -4071.0));
     }
     #[test]
@@ -504,14 +519,14 @@ pub mod tests {
         let row3 = vec![9.0, 8.0, 8.0, 6.0];
         let row4 = vec![5.0, 4.0, 3.0, 2.0];
         let matrix = vec![row1, row2, row3, row4];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
 
         let row1 = vec![-2.0, 1.0, 2.0, 3.0];
         let row2 = vec![3.0, 2.0, 1.0, -1.0];
         let row3 = vec![4.0, 3.0, 6.0, 5.0];
         let row4 = vec![1.0, 2.0, 7.0, 8.0];
         let matrix = vec![row1, row2, row3, row4];
-        let B = Matrix::new( matrix );
+        let B = Matrix::new(matrix);
 
         let D = A.clone();
         let C = A * &B;
@@ -522,29 +537,45 @@ pub mod tests {
     }
     #[test]
     fn default_orientation() {
-        let t = Matrix::view_transformation(Vec3::point(0, 0, 0), Vec3::point(0, 0, -1), Vec3::vector(0, 1, 0));
+        let t = Matrix::view_transformation(
+            Vec3::point(0, 0, 0),
+            Vec3::point(0, 0, -1),
+            Vec3::vector(0, 1, 0),
+        );
         assert_eq!(t, Matrix::identity_matrix(4));
     }
     #[test]
     fn view_transformation_pos_z() {
-        let t = Matrix::view_transformation(Vec3::point(0, 0, 0), Vec3::point(0, 0, 1), Vec3::vector(0, 1, 0));
+        let t = Matrix::view_transformation(
+            Vec3::point(0, 0, 0),
+            Vec3::point(0, 0, 1),
+            Vec3::vector(0, 1, 0),
+        );
         assert_eq!(t, Matrix::scaling(-1.0, 1.0, -1.0));
     }
     #[test]
     fn view_tranformation_move_world() {
-        let t = Matrix::view_transformation(Vec3::point(0, 0, 8), Vec3::point(0, 0, 0), Vec3::vector(0, 1, 0));
+        let t = Matrix::view_transformation(
+            Vec3::point(0, 0, 8),
+            Vec3::point(0, 0, 0),
+            Vec3::vector(0, 1, 0),
+        );
         assert_eq!(t, Matrix::translation(0.0, 0.0, -8.0));
     }
     #[test]
     fn arbitrary_view_transformation() {
-        let t = Matrix::view_transformation(Vec3::point(1, 3, 2), Vec3::point(4, -2, 8), Vec3::vector(1, 1, 0));
+        let t = Matrix::view_transformation(
+            Vec3::point(1, 3, 2),
+            Vec3::point(4, -2, 8),
+            Vec3::vector(1, 1, 0),
+        );
         let matrix = vec![
             vec![-0.50709254, 0.50709254, 0.6761234, -2.366432],
             vec![0.76771593, 0.6060915, 0.12121832, -2.828427],
             vec![-0.35856858, 0.59761435, -0.71713716, -0.00000023841858],
-            vec![0.0, 0.0, 0.0, 1.0]
+            vec![0.0, 0.0, 0.0, 1.0],
         ];
-        let A = Matrix::new( matrix );
+        let A = Matrix::new(matrix);
         assert_eq!(t, A);
     }
 }

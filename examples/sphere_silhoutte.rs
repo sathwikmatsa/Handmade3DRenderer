@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-extern crate Handmade3DRenderer;
 use Handmade3DRenderer::*;
 
 fn main() {
@@ -20,7 +19,7 @@ fn main() {
             let world_x = -1.0 * half + pixel_size * col as f32;
             let point_on_wall = Vec3::point(world_x, world_y, wall_z);
             let ray = Ray::new(ray_origin, (point_on_wall - ray_origin).normalize());
-            let xs : Intersections = ray.intersect(&shape);
+            let xs: Intersections = ray.intersect(&shape);
             if xs.len() != 0 {
                 canvas.set_pixel(row, col, color);
             }

@@ -9,14 +9,30 @@ fn main() {
         Color::new(1.0, 1.0, 1.0),
     ));
 
+    let mut floor = Sphere::new();
+    floor.transform = Matrix::scaling(10.0, 0.01, 10.0);
+    floor.material.color = Color::new(1.0, 0.9, 0.9);
+    floor.material.specular = 0.0;
+
+    let mut left_wall = Sphere::new();
+    left_wall.transform = Matrix::translation(0.0, 0.0, 5.0)
+        * &Matrix::rotation_y(-std::f32::consts::PI / 4.0)
+        * &Matrix::rotation_x(std::f32::consts::PI / 2.0)
+        * &Matrix::scaling(10.0, 0.01, 10.0);
+    left_wall.material = floor.material.clone();
+
+    let mut right_wall = Sphere::new();
+    right_wall.transform = Matrix::translation(0.0, 0.0, 5.0)
+        * &Matrix::rotation_y(std::f32::consts::PI / 4.0)
+        * &Matrix::rotation_x(std::f32::consts::PI / 2.0)
+        * &Matrix::scaling(10.0, 0.01, 10.0);
+    right_wall.material = floor.material.clone();
+
     let mut middle_sphere = Sphere::new();
     middle_sphere.transform = Matrix::translation(-0.5, 1.0, 0.5);
     middle_sphere.material.color = Color::new(0.1, 1.0, 0.5);
     middle_sphere.material.diffuse = 0.7;
     middle_sphere.material.specular = 0.3;
-    let mut ring_pattern = Pattern::ring(vec![WHITE, BLUE, RED, WHITE, RED]);
-    ring_pattern.transform = Matrix::scaling(0.2, 0.2, 0.2).rotate_x(std::f32::consts::PI / 2.0);
-    middle_sphere.material.pattern = Some(ring_pattern);
 
     let mut left_sphere = Sphere::new();
     left_sphere.transform =
@@ -24,21 +40,20 @@ fn main() {
     left_sphere.material.color = Color::new(1.0, 0.8, 0.1);
     left_sphere.material.diffuse = 0.7;
     left_sphere.material.specular = 0.3;
-    let mut stripe_pattern = Pattern::stripe(vec![YELLOW, GREEN]);
-    stripe_pattern.transform = Matrix::scaling(0.2, 0.2, 0.2);
-    left_sphere.material.pattern = Some(stripe_pattern);
 
     let mut right_sphere = Sphere::new();
     right_sphere.transform = Matrix::translation(1.5, 0.5, -0.5) * &Matrix::scaling(0.5, 0.5, 0.5);
     right_sphere.material.color = Color::new(0.5, 1.0, 0.1);
     right_sphere.material.diffuse = 0.7;
     right_sphere.material.specular = 0.3;
-    right_sphere.material.pattern = Some(Pattern::checkers(vec![WHITE, BLACK]));
 
-    let mut plane = Plane::new();
-    plane.material.pattern = Some(Pattern::gradient(vec![ORANGE, BLUE]));
-
-    world.objects.insert(plane.get_id(), Box::new(plane));
+    world.objects.insert(floor.get_id(), Box::new(floor));
+    world
+        .objects
+        .insert(left_wall.get_id(), Box::new(left_wall));
+    world
+        .objects
+        .insert(right_wall.get_id(), Box::new(right_wall));
     world
         .objects
         .insert(left_sphere.get_id(), Box::new(left_sphere));
@@ -56,5 +71,5 @@ fn main() {
         Vec3::vector(0, 1, 0),
     );
     let canvas = camera.render(&world);
-    canvas.save_as_ppm("pattern_scene.ppm");
+    canvas.save_as_ppm("scene_rayon_par.ppm");
 }

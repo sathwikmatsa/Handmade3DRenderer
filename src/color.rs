@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, Mul};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Color {
@@ -8,16 +8,56 @@ pub struct Color {
 }
 
 // predefined constants
-pub const BLACK : Color = Color {red: 0.0, green: 0.0, blue: 0.0};
-pub const WHITE : Color = Color {red: 1.0, green: 1.0, blue: 1.0};
-pub const GREY : Color = Color {red: 0.5, green: 0.5, blue: 0.5};
-pub const RED : Color = Color {red: 1.0, green: 0.0, blue: 0.0};
-pub const GREEN : Color = Color {red: 0.0, green: 1.0, blue: 0.0};
-pub const BLUE : Color = Color {red: 0.0, green: 0.0, blue: 1.0};
-pub const YELLOW : Color = Color {red: 1.0, green: 1.0, blue: 0.0};
-pub const PINK : Color = Color {red: 1.0, green: 0.0, blue: 1.0};
-pub const CYAN : Color = Color {red: 0.0, green: 1.0, blue: 1.0};
-pub const ORANGE : Color = Color {red: 1.0, green: 0.5, blue: 0.0};
+pub const BLACK: Color = Color {
+    red: 0.0,
+    green: 0.0,
+    blue: 0.0,
+};
+pub const WHITE: Color = Color {
+    red: 1.0,
+    green: 1.0,
+    blue: 1.0,
+};
+pub const GREY: Color = Color {
+    red: 0.5,
+    green: 0.5,
+    blue: 0.5,
+};
+pub const RED: Color = Color {
+    red: 1.0,
+    green: 0.0,
+    blue: 0.0,
+};
+pub const GREEN: Color = Color {
+    red: 0.0,
+    green: 1.0,
+    blue: 0.0,
+};
+pub const BLUE: Color = Color {
+    red: 0.0,
+    green: 0.0,
+    blue: 1.0,
+};
+pub const YELLOW: Color = Color {
+    red: 1.0,
+    green: 1.0,
+    blue: 0.0,
+};
+pub const PINK: Color = Color {
+    red: 1.0,
+    green: 0.0,
+    blue: 1.0,
+};
+pub const CYAN: Color = Color {
+    red: 0.0,
+    green: 1.0,
+    blue: 1.0,
+};
+pub const ORANGE: Color = Color {
+    red: 1.0,
+    green: 0.5,
+    blue: 0.0,
+};
 
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
@@ -28,9 +68,9 @@ impl Color {
         }
     }
     pub fn equals(&self, other: Self) -> bool {
-        ((self.red - other.red).abs() < 0.00001) &&
-        ((self.green - other.green).abs() < 0.00001) &&
-        ((self.blue - other.blue).abs() < 0.00001)
+        ((self.red - other.red).abs() < 0.00001)
+            && ((self.green - other.green).abs() < 0.00001)
+            && ((self.blue - other.blue).abs() < 0.00001)
     }
 }
 
@@ -121,7 +161,7 @@ pub mod tests {
     fn multiplying_color_with_scalar() {
         let c = Color::new(0.2, 0.3, 0.4);
         let d = Color::new(0.4, 0.6, 0.8);
-        assert!(d.equals(c*2));
+        assert!(d.equals(c * 2));
     }
     #[test]
     fn multiplying_colors() {

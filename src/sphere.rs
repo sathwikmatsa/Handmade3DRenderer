@@ -1,11 +1,11 @@
-use super::vec3::Vec3;
-use super::light::Light;
 use super::color::Color;
+use super::intersection::*;
+use super::light::Light;
 use super::material::Material;
 use super::matrix::Matrix;
-use super::ray::*;
 use super::object::*;
-use super::intersection::*;
+use super::ray::*;
+use super::vec3::Vec3;
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -22,34 +22,48 @@ impl Object for Sphere {
         let b = 2.0 * ray.direction.dot(sphere_to_ray);
         let c = sphere_to_ray.magnitude_square() - 1.0;
         let discriminant = b * b - 4.0 * a * c;
-        let mut intersections  = Intersections::new();
+        let mut intersections = Intersections::new();
 
         if discriminant >= 0.0 {
-            intersections.push(Intersection {t: (-b - discriminant.sqrt()) / (2.0 * a), obj_id: self.id});
-            intersections.push(Intersection {t: (-b + discriminant.sqrt()) / (2.0 * a), obj_id: self.id});
+            intersections.push(Intersection {
+                t: (-b - discriminant.sqrt()) / (2.0 * a),
+                obj_id: self.id,
+            });
+            intersections.push(Intersection {
+                t: (-b + discriminant.sqrt()) / (2.0 * a),
+                obj_id: self.id,
+            });
         }
         intersections
     }
     fn normal_at(&self, world_point: Vec3) -> Vec3 {
         let object_point = self.transform.inverse_matrix() * world_point;
         let object_normal = object_point - Vec3::point(0, 0, 0);
-        let mut world_normal = (self.transform.inverse_matrix().transpose() * object_normal.as_vec())
-                                .get_tuple();
+        let mut world_normal =
+            (self.transform.inverse_matrix().transpose() * object_normal.as_vec()).get_tuple();
         world_normal[3] = 0.0;
         Vec3::new(world_normal).normalize()
     }
-    fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light, in_shadow: bool) -> Color {
+    fn lighting_at(
+        &self,
+        point: Vec3,
+        eye_v: Vec3,
+        normal_v: Vec3,
+        light: Light,
+        in_shadow: bool,
+    ) -> Color {
         let eye_v = eye_v.normalize();
-        self.material.lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
+        self.material
+            .lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
     }
 }
 
 impl Sphere {
     pub fn new() -> Self {
         let id = get_object_uid();
-        Self{
+        Self {
             id,
-            transform : Matrix::identity_matrix(4),
+            transform: Matrix::identity_matrix(4),
             material: Material::default(),
         }
     }
@@ -74,8 +88,8 @@ impl PartialEq for Sphere {
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
     use super::super::float_cmp;
+    use super::*;
     #[test]
     fn create_spheres() {
         let s1 = Sphere::new();
@@ -138,7 +152,11 @@ pub mod tests {
         let mut s = Sphere::new();
         let m = Matrix::scaling(1.0, 0.5, 1.0) * &Matrix::rotation_z(std::f32::consts::PI / 5.0);
         s.set_transform(m);
-        let n = s.normal_at(Vec3::point(0.0, f32::sqrt(2.0) / 2.0, -1.0*f32::sqrt(2.0) / 2.0));
+        let n = s.normal_at(Vec3::point(
+            0.0,
+            f32::sqrt(2.0) / 2.0,
+            -1.0 * f32::sqrt(2.0) / 2.0,
+        ));
         assert_eq!(n, Vec3::vector(0.0, 0.97014, -0.24254));
     }
     #[test]

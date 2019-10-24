@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use super::object::Object;
-use super::sphere::Sphere;
-use super::light::Light;
-use super::vec3::Vec3;
 use super::color::Color;
-use super::matrix::Matrix;
-use super::ray::Ray;
 use super::intersection::*;
+use super::light::Light;
+use super::matrix::Matrix;
+use super::object::Object;
+use super::ray::Ray;
+use super::sphere::Sphere;
+use super::vec3::Vec3;
+use std::collections::HashMap;
 
 pub struct World {
     pub objects: HashMap<usize, Box<Object>>,
@@ -24,7 +24,10 @@ impl World {
     }
     pub fn default() -> Self {
         let mut world = World::new();
-        world.lights.push(Light::new(Vec3::point(-10, -10, -10), Color::new(1.0, 1.0, 1.0)));
+        world.lights.push(Light::new(
+            Vec3::point(-10, -10, -10),
+            Color::new(1.0, 1.0, 1.0),
+        ));
         let mut s1 = Sphere::new();
         let id1 = s1.get_id();
         s1.material.color = Color::new(0.8, 1.0, 0.6);
@@ -40,7 +43,9 @@ impl World {
     pub fn intersect_with(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
         for (_, boxed_obj) in self.objects.iter() {
-            intersections.crossings.extend((*boxed_obj).intersection(ray).crossings);
+            intersections
+                .crossings
+                .extend((*boxed_obj).intersection(ray).crossings);
         }
         intersections.crossings.sort();
         intersections
@@ -49,16 +54,22 @@ impl World {
         let mut color = Color::new(0.0, 0.0, 0.0);
         for (light_index, light) in self.lights.iter().enumerate() {
             let in_shadow = self.is_shadowed(state.over_point, light_index);
-            color = color + self.objects.get(&state.obj_id).unwrap()
-                        .lighting_at(state.point, state.eyev, state.normalv, *light, in_shadow)
+            color = color
+                + self.objects.get(&state.obj_id).unwrap().lighting_at(
+                    state.point,
+                    state.eyev,
+                    state.normalv,
+                    *light,
+                    in_shadow,
+                )
         }
         color
     }
     pub fn color_at(&self, ray: &Ray) -> Color {
         let xs = self.intersect_with(&ray);
         if let Some(x) = xs.hit() {
-           let state = x.compute_state(&ray, self);
-           self.shade_hit(state)
+            let state = x.compute_state(&ray, self);
+            self.shade_hit(state)
         } else {
             Color::new(0.0, 0.0, 0.0)
         }
@@ -82,8 +93,8 @@ impl World {
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
     use super::super::float_cmp;
+    use super::*;
 
     #[test]
     fn create_world() {
@@ -95,7 +106,10 @@ pub mod tests {
     fn default_world() {
         let world = World::default();
         assert_eq!(world.objects.len(), 2);
-        assert_eq!(world.lights[0], Light::new(Vec3::point(-10, -10, -10), Color::new(1.0, 1.0, 1.0)));
+        assert_eq!(
+            world.lights[0],
+            Light::new(Vec3::point(-10, -10, -10), Color::new(1.0, 1.0, 1.0))
+        );
     }
     #[test]
     fn intersect_with_ray() {
@@ -139,12 +153,17 @@ pub mod tests {
     fn ray_hits() {
         let world = World::default();
         let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
-        assert!(world.color_at(&ray).equals(Color::new(0.38066, 0.47583, 0.2855)));
+        assert!(world
+            .color_at(&ray)
+            .equals(Color::new(0.38066, 0.47583, 0.2855)));
     }
     #[test]
     fn intersection_behind_ray() {
         let mut world = World::new();
-        world.lights.push(Light::new(Vec3::point(-10, -10, -10), Color::new(1.0, 1.0, 1.0)));
+        world.lights.push(Light::new(
+            Vec3::point(-10, -10, -10),
+            Color::new(1.0, 1.0, 1.0),
+        ));
         let mut s1 = Sphere::new();
         let id1 = s1.get_id();
         s1.material.color = Color::new(0.8, 1.0, 0.6);
@@ -187,7 +206,10 @@ pub mod tests {
     #[test]
     fn shade_hit_intersection() {
         let mut world = World::new();
-        world.lights.push(Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0)));
+        world.lights.push(Light::new(
+            Vec3::point(0, 0, -10),
+            Color::new(1.0, 1.0, 1.0),
+        ));
         let s1 = Sphere::new();
         let mut s2 = Sphere::new();
         s2.transform = Matrix::translation(0.0, 0.0, 10.0);

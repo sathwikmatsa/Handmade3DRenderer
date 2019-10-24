@@ -1,7 +1,7 @@
-use super::vec3::Vec3;
+use super::intersection::*;
 use super::matrix::Matrix;
 use super::object::*;
-use super::intersection::*;
+use super::vec3::Vec3;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Ray {
@@ -11,12 +11,15 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Vec3, direction: Vec3) -> Self {
-        assert!(origin.is_point(), "`origin` is not a point, failed to create Ray");
-        assert!(direction.is_vector(), "`direction` is not a vector, failed to create Ray");
-        Self {
-            origin,
-            direction,
-        }
+        assert!(
+            origin.is_point(),
+            "`origin` is not a point, failed to create Ray"
+        );
+        assert!(
+            direction.is_vector(),
+            "`direction` is not a vector, failed to create Ray"
+        );
+        Self { origin, direction }
     }
     pub fn position(&self, t: f32) -> Vec3 {
         self.origin + self.direction * t

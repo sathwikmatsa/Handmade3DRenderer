@@ -1,7 +1,7 @@
 use super::color::*;
+use super::float_cmp;
 use super::matrix::Matrix;
 use super::vec3::*;
-use super::float_cmp;
 use std::fmt;
 
 #[derive(Clone)]
@@ -19,7 +19,11 @@ impl fmt::Debug for Pattern {
 
 impl Pattern {
     pub fn new(colors: Vec<Color>, function: fn(Vec3, &Vec<Color>) -> Color) -> Self {
-        Self { colors, function, transform: Matrix::identity_matrix(4) }
+        Self {
+            colors,
+            function,
+            transform: Matrix::identity_matrix(4),
+        }
     }
     pub fn color_at(&self, point_in_space: Vec3) -> Color {
         (self.function)(point_in_space, &self.colors)
@@ -43,7 +47,11 @@ impl Pattern {
         }
     }
     pub fn gradient(colors: Vec<Color>) -> Self {
-        assert_eq!(colors.len(), 2, "Gradient pattern takes exactly two colors.");
+        assert_eq!(
+            colors.len(),
+            2,
+            "Gradient pattern takes exactly two colors."
+        );
         fn gradient_fn(point: Vec3, gradient: &Vec<Color>) -> Color {
             let distance = gradient[1] - gradient[0];
             let fraction = point.x - point.x.floor();
@@ -56,7 +64,7 @@ impl Pattern {
         }
     }
     pub fn ring(colors: Vec<Color>) -> Self {
-        fn ring_fn(point: Vec3, colors : &Vec<Color>) -> Color {
+        fn ring_fn(point: Vec3, colors: &Vec<Color>) -> Color {
             let n = colors.len();
             colors[((point.x * point.x) + (point.z * point.z)).sqrt().floor() as usize % n]
         }
@@ -67,12 +75,18 @@ impl Pattern {
         }
     }
     pub fn checkers(colors: Vec<Color>) -> Self {
-        fn checkers_fn(point: Vec3, colors : &Vec<Color>) -> Color {
+        fn checkers_fn(point: Vec3, colors: &Vec<Color>) -> Color {
             let n = colors.len();
             let mut p = point;
-            if float_cmp::equal(p.x, 0.0) {p.x = 0.0;}
-            if float_cmp::equal(p.y, 0.0) {p.y = 0.0;}
-            if float_cmp::equal(p.z, 0.0) {p.z = 0.0;}
+            if float_cmp::equal(p.x, 0.0) {
+                p.x = 0.0;
+            }
+            if float_cmp::equal(p.y, 0.0) {
+                p.y = 0.0;
+            }
+            if float_cmp::equal(p.z, 0.0) {
+                p.z = 0.0;
+            }
             // sometimes zero is interpreted as -0.00000011920929
             // which on floor operation gives -1 which is clearly not desirable
             // hence manually checking for apparent zero value with lesser precision than f32::EPSILON
@@ -144,9 +158,18 @@ pub mod tests {
     fn gradient_pattern() {
         let pattern = Pattern::gradient(vec![WHITE, BLACK]);
         assert_eq!(pattern.color_at(Vec3::point(0, 0, 0)), WHITE);
-        assert_eq!(pattern.color_at(Vec3::point(0.25, 0.0, 0.0)), Color::new(0.75, 0.75, 0.75));
-        assert_eq!(pattern.color_at(Vec3::point(0.5, 0.0, 0.0)), Color::new(0.5, 0.5, 0.5));
-        assert_eq!(pattern.color_at(Vec3::point(0.75, 0.0, 0.0)), Color::new(0.25, 0.25, 0.25));
+        assert_eq!(
+            pattern.color_at(Vec3::point(0.25, 0.0, 0.0)),
+            Color::new(0.75, 0.75, 0.75)
+        );
+        assert_eq!(
+            pattern.color_at(Vec3::point(0.5, 0.0, 0.0)),
+            Color::new(0.5, 0.5, 0.5)
+        );
+        assert_eq!(
+            pattern.color_at(Vec3::point(0.75, 0.0, 0.0)),
+            Color::new(0.25, 0.25, 0.25)
+        );
     }
     #[test]
     fn ring_pattern() {

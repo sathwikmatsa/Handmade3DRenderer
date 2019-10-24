@@ -10,7 +10,10 @@ pub struct Light {
 impl Light {
     pub fn new(position: Vec3, intensity: Color) -> Self {
         assert!(position.is_point(), "position has to be Point type");
-        Self { position, intensity }
+        Self {
+            position,
+            intensity,
+        }
     }
 }
 

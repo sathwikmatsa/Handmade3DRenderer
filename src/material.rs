@@ -1,8 +1,8 @@
 use super::color::*;
-use super::vec3::Vec3;
-use super::matrix::Matrix;
 use super::light::Light;
+use super::matrix::Matrix;
 use super::pattern::Pattern;
+use super::vec3::Vec3;
 
 #[derive(Debug, Clone)]
 pub struct Material {
@@ -28,14 +28,50 @@ impl Material {
             reflective: 0.0,
         }
     }
-    pub fn new(color: Color, ambient: f32, diffuse: f32, specular: f32, shininess: f32, reflective: f32, pattern: Option<Pattern>) -> Self {
-        assert!((0.0 <= ambient) && (ambient <= 1.0), "ambient value is out of bounds");
-        assert!((0.0 <= diffuse) && (diffuse <= 1.0), "diffuse value is out of bounds");
-        assert!((0.0 <= specular) && (specular <= 1.0), "specular value is out of bounds");
-        assert!((10.0 <= shininess) && (shininess <= 200.0), "shininess value is out of bounds");
-        Self {color, pattern, ambient, diffuse, specular, shininess, reflective}
+    pub fn new(
+        color: Color,
+        ambient: f32,
+        diffuse: f32,
+        specular: f32,
+        shininess: f32,
+        reflective: f32,
+        pattern: Option<Pattern>,
+    ) -> Self {
+        assert!(
+            (0.0 <= ambient) && (ambient <= 1.0),
+            "ambient value is out of bounds"
+        );
+        assert!(
+            (0.0 <= diffuse) && (diffuse <= 1.0),
+            "diffuse value is out of bounds"
+        );
+        assert!(
+            (0.0 <= specular) && (specular <= 1.0),
+            "specular value is out of bounds"
+        );
+        assert!(
+            (10.0 <= shininess) && (shininess <= 200.0),
+            "shininess value is out of bounds"
+        );
+        Self {
+            color,
+            pattern,
+            ambient,
+            diffuse,
+            specular,
+            shininess,
+            reflective,
+        }
     }
-    pub fn lighting(&self, obj_transform: &Matrix, light: Light, point: Vec3, eye_v: Vec3, normal_v: Vec3, in_shadow: bool) -> Color {
+    pub fn lighting(
+        &self,
+        obj_transform: &Matrix,
+        light: Light,
+        point: Vec3,
+        eye_v: Vec3,
+        normal_v: Vec3,
+        in_shadow: bool,
+    ) -> Color {
         let material_color;
         if let Some(pattern) = &self.pattern {
             material_color = pattern.pattern_at(point, obj_transform);
@@ -80,8 +116,8 @@ impl Material {
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
     use super::super::float_cmp;
+    use super::*;
     #[test]
     fn create_material() {
         let m = Material::new(Color::new(1.0, 1.0, 1.0), 0.1, 0.9, 0.9, 200.0, 0.0, None);
@@ -100,17 +136,31 @@ pub mod tests {
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&Matrix::identity_matrix(4), light, position, eyev, normalv, false);
+        let result = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            position,
+            eyev,
+            normalv,
+            false,
+        );
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
     #[test]
     fn lighting_light_eye_offset_surface() {
         let m = Material::default();
         let position = Vec3::point(0, 0, 0);
-        let eyev = Vec3::vector(0.0, f32::sqrt(2.0)/2.0, -1.0*f32::sqrt(2.0)/2.0);
+        let eyev = Vec3::vector(0.0, f32::sqrt(2.0) / 2.0, -1.0 * f32::sqrt(2.0) / 2.0);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&Matrix::identity_matrix(4), light, position, eyev, normalv, false);
+        let result = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            position,
+            eyev,
+            normalv,
+            false,
+        );
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
     #[test]
@@ -120,17 +170,35 @@ pub mod tests {
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 10, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&Matrix::identity_matrix(4), light, position, eyev, normalv, false);
+        let result = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            position,
+            eyev,
+            normalv,
+            false,
+        );
         assert_eq!(result, Color::new(0.7363961, 0.7363961, 0.7363961));
     }
     #[test]
     fn lighting_eye_in_path_of_reflectionv() {
         let m = Material::default();
         let position = Vec3::point(0, 0, 0);
-        let eyev = Vec3::vector(0.0, -1.0*f32::sqrt(2.0)/2.0, -1.0*f32::sqrt(2.0)/2.0);
+        let eyev = Vec3::vector(
+            0.0,
+            -1.0 * f32::sqrt(2.0) / 2.0,
+            -1.0 * f32::sqrt(2.0) / 2.0,
+        );
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 10, -10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&Matrix::identity_matrix(4), light, position, eyev, normalv, false);
+        let result = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            position,
+            eyev,
+            normalv,
+            false,
+        );
         assert_eq!(result, Color::new(1.6363853, 1.6363853, 1.6363853));
     }
     #[test]
@@ -140,7 +208,14 @@ pub mod tests {
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, 10), Color::new(1.0, 1.0, 1.0));
-        let result = m.lighting(&Matrix::identity_matrix(4), light, position, eyev, normalv, false);
+        let result = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            position,
+            eyev,
+            normalv,
+            false,
+        );
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
     #[test]
@@ -151,17 +226,46 @@ pub mod tests {
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
         let in_shadow = true;
-        let result = m.lighting(&Matrix::identity_matrix(4), light, position, eyev, normalv, in_shadow);
+        let result = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            position,
+            eyev,
+            normalv,
+            in_shadow,
+        );
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
     #[test]
     fn lighting_with_pattern_applied() {
-        let m = Material::new(WHITE, 1.0, 0.0, 0.0, 10.0, 0.0, Some(Pattern::stripe(vec![WHITE, BLACK])));
+        let m = Material::new(
+            WHITE,
+            1.0,
+            0.0,
+            0.0,
+            10.0,
+            0.0,
+            Some(Pattern::stripe(vec![WHITE, BLACK])),
+        );
         let eyev = Vec3::vector(0, 0, -1);
         let normalv = Vec3::vector(0, 0, -1);
         let light = Light::new(Vec3::point(0, 0, -10), Color::new(1.0, 1.0, 1.0));
-        let c1 = m.lighting(&Matrix::identity_matrix(4), light, Vec3::point(0.9, 0.0, 0.0), eyev, normalv, false);
-        let c2 = m.lighting(&Matrix::identity_matrix(4), light, Vec3::point(1.1, 0.0, 0.0), eyev, normalv, false);
+        let c1 = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            Vec3::point(0.9, 0.0, 0.0),
+            eyev,
+            normalv,
+            false,
+        );
+        let c2 = m.lighting(
+            &Matrix::identity_matrix(4),
+            light,
+            Vec3::point(1.1, 0.0, 0.0),
+            eyev,
+            normalv,
+            false,
+        );
         assert_eq!(c1, Color::new(1.0, 1.0, 1.0));
         assert_eq!(c2, Color::new(0.0, 0.0, 0.0));
     }

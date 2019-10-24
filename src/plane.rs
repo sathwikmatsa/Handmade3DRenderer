@@ -1,12 +1,12 @@
-use super::object::*;
-use super::intersection::*;
-use super::ray::*;
-use super::vec3::Vec3;
-use super::light::Light;
 use super::color::Color;
+use super::float_cmp;
+use super::intersection::*;
+use super::light::Light;
 use super::material::Material;
 use super::matrix::Matrix;
-use super::float_cmp;
+use super::object::*;
+use super::ray::*;
+use super::vec3::Vec3;
 
 #[derive(Debug)]
 pub struct Plane {
@@ -21,23 +21,28 @@ impl Object for Plane {
         let mut intersections = Intersections::new();
         if !float_cmp::equal(ray.direction.y, 0.0) {
             let t = -ray.origin.y / ray.direction.y;
-            intersections.push(Intersection {
-                t,
-                obj_id: self.id
-            });
+            intersections.push(Intersection { t, obj_id: self.id });
         }
         intersections
     }
     fn normal_at(&self, _world_point: Vec3) -> Vec3 {
         let object_normal = Vec3::vector(0, 1, 0);
-        let mut world_normal = (self.transform.inverse_matrix().transpose() * object_normal.as_vec())
-                                .get_tuple();
+        let mut world_normal =
+            (self.transform.inverse_matrix().transpose() * object_normal.as_vec()).get_tuple();
         world_normal[3] = 0.0;
         Vec3::new(world_normal).normalize()
     }
-    fn lighting_at(&self, point: Vec3, eye_v: Vec3, normal_v: Vec3, light: Light, in_shadow: bool) -> Color {
+    fn lighting_at(
+        &self,
+        point: Vec3,
+        eye_v: Vec3,
+        normal_v: Vec3,
+        light: Light,
+        in_shadow: bool,
+    ) -> Color {
         let eye_v = eye_v.normalize();
-        self.material.lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
+        self.material
+            .lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
     }
 }
 

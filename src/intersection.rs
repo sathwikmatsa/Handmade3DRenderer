@@ -1,10 +1,10 @@
-use std::cmp::Ordering;
 use super::float_cmp;
-use super::vec3::Vec3;
-use super::ray::Ray;
-use super::world::World;
-use std::ops::{Index};
 use super::float_cmp::EPSILON;
+use super::ray::Ray;
+use super::vec3::Vec3;
+use super::world::World;
+use std::cmp::Ordering;
+use std::ops::Index;
 
 #[derive(Debug)]
 pub struct IntersectionState {
@@ -19,19 +19,18 @@ pub struct IntersectionState {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Intersection{
+pub struct Intersection {
     pub t: f32,
     pub obj_id: usize,
 }
 
 impl Intersection {
     pub fn new(t: f32, obj_id: usize) -> Intersection {
-        Self {t, obj_id}
+        Self { t, obj_id }
     }
     pub fn compute_state(&self, ray: &Ray, world: &World) -> IntersectionState {
         let point = ray.position(self.t);
-        let mut normalv = world.objects.get(&self.obj_id)
-                        .unwrap().normal_at(point);
+        let mut normalv = world.objects.get(&self.obj_id).unwrap().normal_at(point);
         let eyev = -ray.direction;
         let reflectv = ray.direction.reflect(normalv);
         // checking for ray originating from inside the object
@@ -58,16 +57,19 @@ impl Intersection {
             inside: inside,
         }
     }
-
 }
 
 impl Eq for Intersection {}
 
 impl Ord for Intersection {
     fn cmp(&self, other: &Self) -> Ordering {
-        if float_cmp::equal(self.t, other.t) {return Ordering::Equal;}
-        else if float_cmp::greater(self.t, other.t) {return Ordering::Greater;}
-        else {return Ordering::Less;}
+        if float_cmp::equal(self.t, other.t) {
+            return Ordering::Equal;
+        } else if float_cmp::greater(self.t, other.t) {
+            return Ordering::Greater;
+        } else {
+            return Ordering::Less;
+        }
     }
 }
 
@@ -95,7 +97,10 @@ impl Intersections {
         }
     }
     pub fn push(&mut self, crossing: Intersection) {
-        let pos = self.crossings.binary_search(&crossing).unwrap_or_else(|e| e);
+        let pos = self
+            .crossings
+            .binary_search(&crossing)
+            .unwrap_or_else(|e| e);
         self.crossings.insert(pos, crossing);
     }
     pub fn len(&self) -> usize {
@@ -103,12 +108,20 @@ impl Intersections {
     }
     pub fn hit(&self) -> Option<Intersection> {
         // intersection with lowest nonnegative t value
-        if self.len() == 0 {return None;}
+        if self.len() == 0 {
+            return None;
+        }
         let ray_origin = Intersection::new(0.0, self.crossings[0].obj_id);
         let r = self.crossings.binary_search(&ray_origin);
         match r {
             Ok(i) => Some(self.crossings[i]),
-            Err(i) => if i < self.len() {Some(self.crossings[i])} else {None},
+            Err(i) => {
+                if i < self.len() {
+                    Some(self.crossings[i])
+                } else {
+                    None
+                }
+            }
         }
     }
 }
@@ -123,9 +136,9 @@ impl Index<usize> for Intersections {
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
-    use super::super::sphere::Sphere;
     use super::super::matrix::Matrix;
+    use super::super::sphere::Sphere;
+    use super::*;
 
     #[test]
     fn create_intersection_object() {
@@ -176,8 +189,7 @@ pub mod tests {
         world.objects.insert(shape_id, Box::new(shape));
         let xs = Intersection::new(5.0, shape_id);
         let comps = xs.compute_state(&ray, &world);
-        assert!(comps.over_point.z < -EPSILON/2.0);
+        assert!(comps.over_point.z < -EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);
     }
 }
-

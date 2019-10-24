@@ -1,5 +1,5 @@
-use std::ops::{Add, Sub, Neg, Mul, Div};
 use super::float_cmp;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Vec3Type {
@@ -32,7 +32,9 @@ impl Vec3Coordinate for i32 {
 
 impl Vec3 {
     pub fn point<T>(x: T, y: T, z: T) -> Self
-    where T: Vec3Coordinate {
+    where
+        T: Vec3Coordinate,
+    {
         Self {
             x: x.value(),
             y: y.value(),
@@ -41,7 +43,9 @@ impl Vec3 {
         }
     }
     pub fn vector<T>(x: T, y: T, z: T) -> Self
-    where T: Vec3Coordinate {
+    where
+        T: Vec3Coordinate,
+    {
         Self {
             x: x.value(),
             y: y.value(),
@@ -50,8 +54,16 @@ impl Vec3 {
         }
     }
     pub fn new(v: Vec<f32>) -> Self {
-        assert_eq!(v.len(), 4, "vector length doesn't equal 4, can't create Vec3");
-        let vec_type : Vec3Type = if float_cmp::equal(v[3], 0.0) { Vec3Type::Vector } else { Vec3Type::Point };
+        assert_eq!(
+            v.len(),
+            4,
+            "vector length doesn't equal 4, can't create Vec3"
+        );
+        let vec_type: Vec3Type = if float_cmp::equal(v[3], 0.0) {
+            Vec3Type::Vector
+        } else {
+            Vec3Type::Point
+        };
         Self {
             x: v[0],
             y: v[1],
@@ -60,19 +72,31 @@ impl Vec3 {
         }
     }
     pub fn as_vec(&self) -> Vec<f32> {
-        let w : f32 = if self.t == Vec3Type::Vector { 0.0 } else { 1.0 };
+        let w: f32 = if self.t == Vec3Type::Vector { 0.0 } else { 1.0 };
         vec![self.x, self.y, self.z, w]
     }
     pub fn magnitude(&self) -> f32 {
-        assert_eq!(self.t, Vec3Type::Vector, "Cannot call magnitude method on Point type");
+        assert_eq!(
+            self.t,
+            Vec3Type::Vector,
+            "Cannot call magnitude method on Point type"
+        );
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
     pub fn magnitude_square(&self) -> f32 {
-        assert_eq!(self.t, Vec3Type::Vector, "Cannot call magnitude_square method on Point type");
+        assert_eq!(
+            self.t,
+            Vec3Type::Vector,
+            "Cannot call magnitude_square method on Point type"
+        );
         self.x * self.x + self.y * self.y + self.z * self.z
     }
     pub fn normalize(&self) -> Self {
-        assert_eq!(self.t, Vec3Type::Vector, "Cannot call normalize method on Point type");
+        assert_eq!(
+            self.t,
+            Vec3Type::Vector,
+            "Cannot call normalize method on Point type"
+        );
         let m = self.magnitude();
         Self {
             x: self.x / m,
@@ -82,17 +106,33 @@ impl Vec3 {
         }
     }
     pub fn reflect(&self, normal: Self) -> Self {
-        assert_eq!(self.t, Vec3Type::Vector, "Reflect method is undefined for Point type");
+        assert_eq!(
+            self.t,
+            Vec3Type::Vector,
+            "Reflect method is undefined for Point type"
+        );
         assert_eq!(normal.t, Vec3Type::Vector, "normal has to be Vector type");
         *self - normal * 2 * self.dot(normal)
     }
     pub fn dot(&self, other: Self) -> f32 {
-        assert_eq!(self.t, Vec3Type::Vector, "Cannot call dot product on two point types");
+        assert_eq!(
+            self.t,
+            Vec3Type::Vector,
+            "Cannot call dot product on two point types"
+        );
         self.x * other.x + self.y * other.y + self.z * other.z
     }
     pub fn cross(&self, other: Self) -> Self {
-        assert_eq!(self.t, Vec3Type::Vector, "Cannot call cross product on two point types");
-        Vec3::vector(self.y*other.z - self.z*other.y, self.z*other.x - self.x*other.z, self.x*other.y - self.y*other.x)
+        assert_eq!(
+            self.t,
+            Vec3Type::Vector,
+            "Cannot call cross product on two point types"
+        );
+        Vec3::vector(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
     }
     pub fn is_point(&self) -> bool {
         self.t == Vec3Type::Point
@@ -108,7 +148,6 @@ impl Add for Vec3 {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-
         let output_t;
         if self.t == Vec3Type::Point && other.t == Vec3Type::Point {
             panic!("Cannot add a point to a point.");
@@ -133,7 +172,6 @@ impl Sub for Vec3 {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
-
         let output_t;
         if self.t == Vec3Type::Point && other.t == Vec3Type::Point {
             // p2 - p1 -> vector(p2-p1)
@@ -141,7 +179,7 @@ impl Sub for Vec3 {
         } else if self.t == Vec3Type::Point {
             // point - vector -> point
             output_t = Vec3Type::Point;
-        } else if self.t == Vec3Type::Vector && other.t == Vec3Type::Vector{
+        } else if self.t == Vec3Type::Vector && other.t == Vec3Type::Vector {
             // vector - vector -> vector
             output_t = Vec3Type::Vector;
         } else {
@@ -230,10 +268,10 @@ impl Div<i32> for Vec3 {
 
 impl PartialEq for Vec3 {
     fn eq(&self, other: &Self) -> bool {
-        float_cmp::equal(self.x, other.x) &&
-        float_cmp::equal(self.y, other.y) &&
-        float_cmp::equal(self.z, other.z) &&
-        self.t == other.t
+        float_cmp::equal(self.x, other.x)
+            && float_cmp::equal(self.y, other.y)
+            && float_cmp::equal(self.z, other.z)
+            && self.t == other.t
     }
 }
 
@@ -330,7 +368,7 @@ mod tests {
         assert_eq!(r, Vec3::vector(1, 1, 0));
 
         let v = Vec3::vector(0, -1, 0);
-        let n = Vec3::vector(f32::sqrt(2.0)/2.0, f32::sqrt(2.0)/2.0, 0.0);
+        let n = Vec3::vector(f32::sqrt(2.0) / 2.0, f32::sqrt(2.0) / 2.0, 0.0);
         let r = v.reflect(n);
         assert_eq!(r, Vec3::vector(1, 0, 0));
     }

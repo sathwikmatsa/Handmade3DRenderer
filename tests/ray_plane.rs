@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-extern crate Handmade3DRenderer;
 use Handmade3DRenderer::*;
 
 #[test]

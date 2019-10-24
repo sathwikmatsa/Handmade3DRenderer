@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-extern crate Handmade3DRenderer;
 use Handmade3DRenderer::Matrix;
 use Handmade3DRenderer::Vec3;
 
@@ -80,8 +79,12 @@ fn chaining_transformations() {
     // chained transformation
     assert_eq!(p4, &C * &B * &A * p);
     // fluent API
-    assert_eq!(p4, Matrix::identity_matrix(4)
-                           .rotate_x(std::f32::consts::PI / 2.0)
-                           .scale(5.0, 5.0, 5.0)
-                           .translate(10.0, 5.0, 7.0) * p)
+    assert_eq!(
+        p4,
+        Matrix::identity_matrix(4)
+            .rotate_x(std::f32::consts::PI / 2.0)
+            .scale(5.0, 5.0, 5.0)
+            .translate(10.0, 5.0, 7.0)
+            * p
+    )
 }
