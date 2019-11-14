@@ -50,17 +50,18 @@ impl Canvas {
         self.grid[(row * self.width + col) as usize] = color
     }
     fn clamp(i: f32) -> u8 {
-        let mut scaled = (i * 255.0) as i32;
+        let scaled = (i * 255.0) as i32;
         if scaled > 255 {
-            scaled = 255;
+            255
         } else if scaled < 0 {
-            scaled = 0;
+            0
+        } else {
+            scaled as u8
         }
-        scaled as u8
     }
     pub fn save_as_ppm(&self, filename: &str) {
         let mut ppm = format!("P3\n{} {}\n255\n", self.width, self.height);
-        for pixel in self.grid.iter() {
+        for pixel in &self.grid {
             ppm += format!(
                 "{} {} {}\n",
                 Self::clamp(pixel.red),
@@ -70,7 +71,8 @@ impl Canvas {
             .as_str();
         }
         let mut file = File::create(filename).expect("Unable to create file");
-        file.write(ppm.as_bytes()).expect("Unable to write to file");
+        file.write_all(ppm.as_bytes())
+            .expect("Unable to write to file");
     }
 }
 

@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use std::ops::Index;
 
 #[derive(Debug)]
-pub struct IntersectionState {
+pub struct State {
     pub t: f32,
     pub obj_id: usize,
     pub point: Vec3,
@@ -25,10 +25,10 @@ pub struct Intersection {
 }
 
 impl Intersection {
-    pub fn new(t: f32, obj_id: usize) -> Intersection {
+    pub fn new(t: f32, obj_id: usize) -> Self {
         Self { t, obj_id }
     }
-    pub fn compute_state(&self, ray: &Ray, world: &World) -> IntersectionState {
+    pub fn compute_state(&self, ray: &Ray, world: &World) -> State {
         let point = ray.position(self.t);
         let mut normalv = world.objects.get(&self.obj_id).unwrap().normal_at(point);
         let eyev = -ray.direction;
@@ -46,15 +46,15 @@ impl Intersection {
         // required to prevent intersection to be treated as shadow
         let over_point = point + normalv * 15.0 * EPSILON;
 
-        IntersectionState {
+        State {
             t: self.t,
             obj_id: self.obj_id,
-            point: point,
-            over_point: over_point,
-            eyev: eyev,
-            normalv: normalv,
-            reflectv: reflectv,
-            inside: inside,
+            point,
+            over_point,
+            eyev,
+            normalv,
+            reflectv,
+            inside,
         }
     }
 }
@@ -64,11 +64,11 @@ impl Eq for Intersection {}
 impl Ord for Intersection {
     fn cmp(&self, other: &Self) -> Ordering {
         if float_cmp::equal(self.t, other.t) {
-            return Ordering::Equal;
+            Ordering::Equal
         } else if float_cmp::greater(self.t, other.t) {
-            return Ordering::Greater;
+            Ordering::Greater
         } else {
-            return Ordering::Less;
+            Ordering::Less
         }
     }
 }
@@ -85,7 +85,7 @@ impl PartialEq for Intersection {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Intersections {
     pub crossings: Vec<Intersection>,
 }
@@ -106,9 +106,12 @@ impl Intersections {
     pub fn len(&self) -> usize {
         self.crossings.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self.crossings.len() == 0
+    }
     pub fn hit(&self) -> Option<Intersection> {
         // intersection with lowest nonnegative t value
-        if self.len() == 0 {
+        if self.is_empty() {
             return None;
         }
         let ray_origin = Intersection::new(0.0, self.crossings[0].obj_id);
@@ -137,7 +140,9 @@ impl Index<usize> for Intersections {
 #[cfg(test)]
 pub mod tests {
     use super::super::matrix::Matrix;
+    use super::super::plane::Plane;
     use super::super::sphere::Sphere;
+    use super::float_cmp::*;
     use super::*;
 
     #[test]
@@ -191,5 +196,19 @@ pub mod tests {
         let comps = xs.compute_state(&ray, &world);
         assert!(comps.over_point.z < -EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);
+    }
+    #[test]
+    fn precompute_reflectv() {
+        let mut world = World::new();
+        let shape = Plane::new();
+        let shape_id = shape.get_id();
+        world.objects.insert(shape_id, Box::new(shape));
+        let ray = Ray::new(
+            Vec3::point(0, 1, -1),
+            Vec3::vector(0.0, -INVSQRT2, INVSQRT2),
+        );
+        let xs = Intersection::new(SQRT2, shape_id);
+        let comps = xs.compute_state(&ray, &world);
+        assert_eq!(comps.reflectv, Vec3::vector(0.0, INVSQRT2, INVSQRT2));
     }
 }

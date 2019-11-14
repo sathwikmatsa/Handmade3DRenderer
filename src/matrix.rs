@@ -13,8 +13,8 @@ impl Matrix {
     pub fn new(matrix: Vec<Vec<f32>>) -> Self {
         let n = matrix[0].len();
         let m = matrix.len();
-        for i in 1..m {
-            assert_eq!(n, matrix[i].len(), "Not a rectangular array");
+        for a in &matrix {
+            assert_eq!(n, a.len(), "Not a rectangular array");
         }
         Self {
             cells: matrix,
@@ -32,10 +32,10 @@ impl Matrix {
             n_cols: n,
         }
     }
-    pub fn column_matrix(vector: Vec<f32>) -> Self {
+    pub fn column_matrix(vector: &[f32]) -> Self {
         let m = vector.len();
         let mut matrix = Vec::new();
-        for ele in vector.iter() {
+        for ele in vector {
             let mut vec = Vec::new();
             vec.push(*ele);
             matrix.push(vec);
@@ -49,7 +49,7 @@ impl Matrix {
     pub fn get_tuple(self) -> Vec<f32> {
         assert_eq!(self.n_cols, 1);
         let mut vector = Vec::new();
-        for row in self.cells.iter() {
+        for row in &self.cells {
             vector.push(row[0]);
         }
         vector
@@ -88,7 +88,7 @@ impl Matrix {
         matrix
     }
     pub fn transpose(&self) -> Self {
-        Matrix::new(self.columns())
+        Self::new(self.columns())
     }
     pub fn determinant(&self) -> f32 {
         assert_eq!(
@@ -135,12 +135,7 @@ impl Matrix {
         self.sub_matrix(row, col).determinant()
     }
     pub fn cofactor(&self, row: usize, col: usize) -> f32 {
-        let sign;
-        if (row + col) % 2 == 1 {
-            sign = -1.0;
-        } else {
-            sign = 1.0;
-        }
+        let sign = if (row + col) % 2 == 1 { -1.0 } else { 1.0 };
         sign * self.minor(row, col)
     }
     pub fn is_invertible(&self) -> bool {
@@ -186,7 +181,7 @@ impl Matrix {
         matrix
     }
     pub fn rotate_x(&self, rads: f32) -> Self {
-        Matrix::rotation_x(rads) * self
+        Self::rotation_x(rads) * self
     }
     pub fn rotation_y(rads: f32) -> Self {
         let mut matrix = Self::identity_matrix(4);
@@ -197,7 +192,7 @@ impl Matrix {
         matrix
     }
     pub fn rotate_y(&self, rads: f32) -> Self {
-        Matrix::rotation_y(rads) * self
+        Self::rotation_y(rads) * self
     }
     pub fn rotation_z(rads: f32) -> Self {
         let mut matrix = Self::identity_matrix(4);
@@ -208,7 +203,7 @@ impl Matrix {
         matrix
     }
     pub fn rotate_z(&self, rads: f32) -> Self {
-        Matrix::rotation_z(rads) * self
+        Self::rotation_z(rads) * self
     }
     pub fn shearing(xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
         let mut matrix = Self::identity_matrix(4);
@@ -221,7 +216,7 @@ impl Matrix {
         matrix
     }
     pub fn shear(&self, xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
-        Matrix::shearing(xy, xz, yx, yz, zx, zy) * self
+        Self::shearing(xy, xz, yx, yz, zx, zy) * self
     }
     pub fn view_transformation(from: Vec3, to: Vec3, up: Vec3) -> Self {
         let forward = (to - from).normalize();
@@ -235,8 +230,8 @@ impl Matrix {
             vec![-forward.x, -forward.y, -forward.z, 0.0],
             vec![0.0, 0.0, 0.0, 1.0],
         ];
-        let orientation = Matrix::new(matrix);
-        orientation * &Matrix::translation(-from.x, -from.y, -from.z)
+        let orientation = Self::new(matrix);
+        orientation * &Self::translation(-from.x, -from.y, -from.z)
     }
 }
 
@@ -294,7 +289,7 @@ impl Mul<Vec<f32>> for Matrix {
     type Output = Self;
 
     fn mul(self, rhs: Vec<f32>) -> Self {
-        let other_matrix = Self::column_matrix(rhs);
+        let other_matrix = Self::column_matrix(&rhs);
         self * &other_matrix
     }
 }
@@ -303,7 +298,7 @@ impl<'a> Mul<Vec<f32>> for &'a Matrix {
     type Output = Matrix;
 
     fn mul(self, rhs: Vec<f32>) -> Matrix {
-        let other_matrix = Matrix::column_matrix(rhs);
+        let other_matrix = Matrix::column_matrix(&rhs);
         self * &other_matrix
     }
 }
@@ -313,7 +308,7 @@ impl Mul<Vec3> for Matrix {
 
     fn mul(self, rhs: Vec3) -> Vec3 {
         let v = (self * rhs.as_vec()).get_tuple();
-        Vec3::new(v)
+        Vec3::new(&v)
     }
 }
 
@@ -322,7 +317,7 @@ impl<'a> Mul<Vec3> for &'a Matrix {
 
     fn mul(self, rhs: Vec3) -> Vec3 {
         let v = (self * rhs.as_vec()).get_tuple();
-        Vec3::new(v)
+        Vec3::new(&v)
     }
 }
 

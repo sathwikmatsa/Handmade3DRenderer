@@ -23,11 +23,11 @@ fn aggregating_intersections() {
 #[test]
 fn ray_intersections() {
     let ray = Ray::new(Vec3::point(0, 0, -5), Vec3::vector(0, 0, 1));
-    let sphere = Box::new(Sphere::new());
+    let sphere = Sphere::new();
     let xs = ray.intersect(&sphere);
     assert_eq!(xs.len(), 2);
     assert_eq!(xs[0].obj_id, xs[1].obj_id);
-    assert_eq!(xs[0].obj_id, (*sphere).get_id());
+    assert_eq!(xs[0].obj_id, (sphere).get_id());
 }
 #[test]
 fn hit_intersection() {

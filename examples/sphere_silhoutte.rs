@@ -12,7 +12,6 @@ fn main() {
     let pixel_size = wall_size / canvas_size as f32;
     let half = wall_size / 2.0;
     let shape = Sphere::new();
-    let shape = Box::new(shape);
     for row in 0..canvas_size {
         let world_y = half - pixel_size * row as f32;
         for col in 0..canvas_size {

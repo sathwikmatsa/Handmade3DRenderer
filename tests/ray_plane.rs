@@ -4,7 +4,7 @@ use Handmade3DRenderer::*;
 
 #[test]
 fn ray_parallel_to_plane() {
-    let p = Box::new(Plane::new());
+    let p = Plane::new();
     let r = Ray::new(Vec3::point(0, 10, 0), Vec3::vector(0, 0, 1));
     let xs = r.intersect(&p);
     assert_eq!(xs.len(), 0);
@@ -12,7 +12,7 @@ fn ray_parallel_to_plane() {
 
 #[test]
 fn intersect_with_coplanar_ray() {
-    let p = Box::new(Plane::new());
+    let p = Plane::new();
     let r = Ray::new(Vec3::point(0, 0, 0), Vec3::vector(0, 0, 1));
     let xs = r.intersect(&p);
     assert_eq!(xs.len(), 0);
@@ -22,7 +22,6 @@ fn intersect_with_coplanar_ray() {
 fn intersect_plane_from_above() {
     let p = Plane::new();
     let id = p.get_id();
-    let p = Box::new(p);
     let r = Ray::new(Vec3::point(0, 1, 0), Vec3::vector(0, -1, 0));
     let xs = r.intersect(&p);
     assert_eq!(xs.len(), 1);
@@ -34,7 +33,6 @@ fn intersect_plane_from_above() {
 fn intersect_plane_from_below() {
     let p = Plane::new();
     let id = p.get_id();
-    let p = Box::new(p);
     let r = Ray::new(Vec3::point(0, -1, 0), Vec3::vector(0, 1, 0));
     let xs = r.intersect(&p);
     assert_eq!(xs.len(), 1);

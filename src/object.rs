@@ -1,6 +1,7 @@
 use super::color::Color;
 use super::intersection::Intersections;
 use super::light::Light;
+use super::material::Material;
 use super::ray::Ray;
 use super::vec3::Vec3;
 use std::sync::atomic;
@@ -22,4 +23,6 @@ pub trait Object {
         light: Light,
         in_shadow: bool,
     ) -> Color;
+    fn mut_material(&mut self) -> &mut Material;
+    fn material(&self) -> &Material;
 }

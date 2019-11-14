@@ -20,24 +20,20 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(hsize: u32, vsize: u32, field_of_view: f32) -> Self {
+    pub fn new(horizontal_size: u32, vertical_size: u32, field_of_view: f32) -> Self {
         let half_view = (field_of_view / 2.0).tan();
-        let aspect = hsize as f32 / vsize as f32;
+        let aspect = horizontal_size as f32 / vertical_size as f32;
 
-        let half_width;
-        let half_height;
-        if aspect >= 1.0 {
-            half_width = half_view;
-            half_height = half_view / aspect as f32;
+        let (half_width, half_height) = if aspect >= 1.0 {
+            (half_view, half_view / aspect as f32)
         } else {
-            half_width = half_view * aspect as f32;
-            half_height = half_view;
-        }
+            (half_view * aspect as f32, half_view)
+        };
 
-        let pixel_size = half_width * 2.0 / hsize as f32;
+        let pixel_size = half_width * 2.0 / horizontal_size as f32;
         Self {
-            hsize,
-            vsize,
+            hsize: horizontal_size,
+            vsize: vertical_size,
             field_of_view,
             half_width,
             half_height,
@@ -59,7 +55,7 @@ impl Camera {
     }
     pub fn render(&self, world: &World) -> Canvas {
         let mut canvas = Canvas::new(self.hsize, self.vsize);
-        let n_pixels: u64 = self.hsize as u64 * self.vsize as u64;
+        let n_pixels: u64 = u64::from(self.hsize) * u64::from(self.vsize);
 
         // Provide a custom bar style
         let pb = ProgressBar::new(n_pixels);

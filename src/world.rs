@@ -1,4 +1,5 @@
 use super::color::Color;
+use super::float_cmp;
 use super::intersection::*;
 use super::light::Light;
 use super::matrix::Matrix;
@@ -8,8 +9,9 @@ use super::sphere::Sphere;
 use super::vec3::Vec3;
 use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct World {
-    pub objects: HashMap<usize, Box<Object>>,
+    pub objects: HashMap<usize, Box<dyn Object>>,
     pub lights: Vec<Light>,
 }
 
@@ -17,15 +19,15 @@ unsafe impl Sync for World {}
 
 impl World {
     pub fn new() -> Self {
-        World {
+        Self {
             objects: HashMap::new(),
             lights: Vec::new(),
         }
     }
     pub fn default() -> Self {
-        let mut world = World::new();
+        let mut world = Self::new();
         world.lights.push(Light::new(
-            Vec3::point(-10, -10, -10),
+            Vec3::point(-10, 10, -10),
             Color::new(1.0, 1.0, 1.0),
         ));
         let mut s1 = Sphere::new();
@@ -42,7 +44,7 @@ impl World {
     }
     pub fn intersect_with(&self, ray: &Ray) -> Intersections {
         let mut intersections = Intersections::new();
-        for (_, boxed_obj) in self.objects.iter() {
+        for boxed_obj in self.objects.values() {
             intersections
                 .crossings
                 .extend((*boxed_obj).intersection(ray).crossings);
@@ -50,7 +52,7 @@ impl World {
         intersections.crossings.sort();
         intersections
     }
-    pub fn shade_hit(&self, state: IntersectionState) -> Color {
+    pub fn shade_hit(&self, state: &State) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
         for (light_index, light) in self.lights.iter().enumerate() {
             let in_shadow = self.is_shadowed(state.over_point, light_index);
@@ -61,7 +63,8 @@ impl World {
                     state.normalv,
                     *light,
                     in_shadow,
-                )
+                );
+            color = color + self.reflected_color(&state)
         }
         color
     }
@@ -69,7 +72,7 @@ impl World {
         let xs = self.intersect_with(&ray);
         if let Some(x) = xs.hit() {
             let state = x.compute_state(&ray, self);
-            self.shade_hit(state)
+            self.shade_hit(&state)
         } else {
             Color::new(0.0, 0.0, 0.0)
         }
@@ -87,14 +90,31 @@ impl World {
                 return true;
             }
         }
-        return false;
+        false
+    }
+    pub fn reflected_color(&self, state: &State) -> Color {
+        let reflectivity = self
+            .objects
+            .get(&state.obj_id)
+            .unwrap()
+            .material()
+            .reflective;
+        if float_cmp::equal(reflectivity, 0.0) {
+            Color::new(0.0, 0.0, 0.0)
+        } else {
+            let reflected_ray = Ray::new(state.over_point, state.reflectv);
+            let color = self.color_at(&reflected_ray);
+
+            color * reflectivity
+        }
     }
 }
 
 #[cfg(test)]
 pub mod tests {
-    use super::super::float_cmp;
+    use super::super::plane::Plane;
     use super::*;
+    use float_cmp::*;
 
     #[test]
     fn create_world() {
@@ -108,7 +128,7 @@ pub mod tests {
         assert_eq!(world.objects.len(), 2);
         assert_eq!(
             world.lights[0],
-            Light::new(Vec3::point(-10, -10, -10), Color::new(1.0, 1.0, 1.0))
+            Light::new(Vec3::point(-10, 10, -10), Color::new(1.0, 1.0, 1.0))
         );
     }
     #[test]
@@ -129,7 +149,7 @@ pub mod tests {
         let id = world.objects.keys().min().unwrap();
         let intersection = Intersection::new(4.0, *id);
         let state = intersection.compute_state(&ray, &world);
-        let color = world.shade_hit(state);
+        let color = world.shade_hit(&state);
         assert!(color.equals(Color::new(0.38066, 0.47582, 0.28549)));
     }
     #[test]
@@ -140,7 +160,7 @@ pub mod tests {
         let id = world.objects.keys().max().unwrap();
         let intersection = Intersection::new(0.5, *id);
         let state = intersection.compute_state(&ray, &world);
-        let color = world.shade_hit(state);
+        let color = world.shade_hit(&state);
         assert!(color.equals(Color::new(0.90498, 0.90498, 0.90498)));
     }
     #[test]
@@ -188,7 +208,7 @@ pub mod tests {
     #[test]
     fn obj_between_point_and_light() {
         let world = World::default();
-        let p = Vec3::point(10, 10, 10);
+        let p = Vec3::point(10, -10, 10);
         assert_eq!(world.is_shadowed(p, 0), true);
     }
     #[test]
@@ -219,7 +239,52 @@ pub mod tests {
         let ray = Ray::new(Vec3::point(0, 0, 5), Vec3::vector(0, 0, 1));
         let xs = Intersection::new(4.0, s2_id);
         let comps = xs.compute_state(&ray, &world);
-        let color = world.shade_hit(comps);
+        let color = world.shade_hit(&comps);
         assert_eq!(color, Color::new(0.1, 0.1, 0.1));
+    }
+    #[test]
+    fn strike_non_reflective_surface() {
+        let mut world = World::default();
+        let ray = Ray::new(Vec3::point(0, 0, 5), Vec3::vector(0, 0, 1));
+        let id = world.objects.keys().max().unwrap().clone();
+        let xs = Intersection::new(1.0, id);
+        world.objects.get_mut(&id).unwrap().mut_material().ambient = 1.0;
+        let comps = xs.compute_state(&ray, &world);
+        let color = world.reflected_color(&comps);
+        assert_eq!(color, Color::new(0.0, 0.0, 0.0));
+    }
+    #[test]
+    fn strike_reflective_surface() {
+        let mut world = World::default();
+        let mut shape = Plane::new();
+        shape.material.reflective = 0.5;
+        shape.transform = Matrix::translation(0.0, -1.0, 0.0);
+        let shape_id = shape.get_id();
+        world.objects.insert(shape_id, Box::new(shape));
+        let ray = Ray::new(
+            Vec3::point(0, 0, -3),
+            Vec3::vector(0.0, -INVSQRT2, INVSQRT2),
+        );
+        let xs = Intersection::new(SQRT2, shape_id);
+        let comps = xs.compute_state(&ray, &world);
+        let color = world.reflected_color(&comps);
+        assert_eq!(color, Color::new(0.19058922, 0.2382365, 0.14294192));
+    }
+    #[test]
+    fn shade_hit_with_reflective_material() {
+        let mut world = World::default();
+        let mut shape = Plane::new();
+        shape.material.reflective = 0.5;
+        shape.transform = Matrix::translation(0.0, -1.0, 0.0);
+        let shape_id = shape.get_id();
+        world.objects.insert(shape_id, Box::new(shape));
+        let ray = Ray::new(
+            Vec3::point(0, 0, -3),
+            Vec3::vector(0.0, -INVSQRT2, INVSQRT2),
+        );
+        let xs = Intersection::new(SQRT2, shape_id);
+        let comps = xs.compute_state(&ray, &world);
+        let color = world.shade_hit(&comps);
+        assert_eq!(color, Color::new(0.87701464, 0.92466193, 0.8293674));
     }
 }

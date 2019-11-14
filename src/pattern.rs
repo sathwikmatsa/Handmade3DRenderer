@@ -7,7 +7,7 @@ use std::fmt;
 #[derive(Clone)]
 pub struct Pattern {
     colors: Vec<Color>,
-    function: fn(Vec3, &Vec<Color>) -> Color,
+    function: fn(Vec3, &[Color]) -> Color,
     pub transform: Matrix,
 }
 
@@ -18,7 +18,7 @@ impl fmt::Debug for Pattern {
 }
 
 impl Pattern {
-    pub fn new(colors: Vec<Color>, function: fn(Vec3, &Vec<Color>) -> Color) -> Self {
+    pub fn new(colors: Vec<Color>, function: fn(Vec3, &[Color]) -> Color) -> Self {
         Self {
             colors,
             function,
@@ -36,46 +36,46 @@ impl Pattern {
     }
     // predefined patterns
     pub fn stripe(colors: Vec<Color>) -> Self {
-        fn stripe_fn(point: Vec3, colors: &Vec<Color>) -> Color {
+        fn stripe_fn(point: Vec3, colors: &[Color]) -> Color {
             let n = colors.len();
             colors[point.x.floor() as usize % n]
         }
         Self {
-            colors: colors,
+            colors,
             function: stripe_fn,
             transform: Matrix::identity_matrix(4),
         }
     }
     pub fn gradient(colors: Vec<Color>) -> Self {
+        fn gradient_fn(point: Vec3, gradient: &[Color]) -> Color {
+            let distance = gradient[1] - gradient[0];
+            let fraction = point.x - point.x.floor();
+            gradient[0] + distance * fraction
+        }
         assert_eq!(
             colors.len(),
             2,
             "Gradient pattern takes exactly two colors."
         );
-        fn gradient_fn(point: Vec3, gradient: &Vec<Color>) -> Color {
-            let distance = gradient[1] - gradient[0];
-            let fraction = point.x - point.x.floor();
-            gradient[0] + distance * fraction
-        }
         Self {
-            colors: colors,
+            colors,
             function: gradient_fn,
             transform: Matrix::identity_matrix(4),
         }
     }
     pub fn ring(colors: Vec<Color>) -> Self {
-        fn ring_fn(point: Vec3, colors: &Vec<Color>) -> Color {
+        fn ring_fn(point: Vec3, colors: &[Color]) -> Color {
             let n = colors.len();
             colors[((point.x * point.x) + (point.z * point.z)).sqrt().floor() as usize % n]
         }
         Self {
-            colors: colors,
+            colors,
             function: ring_fn,
             transform: Matrix::identity_matrix(4),
         }
     }
     pub fn checkers(colors: Vec<Color>) -> Self {
-        fn checkers_fn(point: Vec3, colors: &Vec<Color>) -> Color {
+        fn checkers_fn(point: Vec3, colors: &[Color]) -> Color {
             let n = colors.len();
             let mut p = point;
             if float_cmp::equal(p.x, 0.0) {
@@ -94,7 +94,7 @@ impl Pattern {
             colors[(p.x.floor() + p.y.floor() + p.z.floor()) as usize % n]
         }
         Self {
-            colors: colors,
+            colors,
             function: checkers_fn,
             transform: Matrix::identity_matrix(4),
         }

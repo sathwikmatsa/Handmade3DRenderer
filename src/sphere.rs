@@ -42,7 +42,7 @@ impl Object for Sphere {
         let mut world_normal =
             (self.transform.inverse_matrix().transpose() * object_normal.as_vec()).get_tuple();
         world_normal[3] = 0.0;
-        Vec3::new(world_normal).normalize()
+        Vec3::new(&world_normal).normalize()
     }
     fn lighting_at(
         &self,
@@ -55,6 +55,12 @@ impl Object for Sphere {
         let eye_v = eye_v.normalize();
         self.material
             .lighting(&self.transform, light, point, eye_v, normal_v, in_shadow)
+    }
+    fn mut_material(&mut self) -> &mut Material {
+        &mut self.material
+    }
+    fn material(&self) -> &Material {
+        &self.material
     }
 }
 
@@ -77,6 +83,12 @@ impl Sphere {
     }
     pub fn set_material(&mut self, material: Material) {
         self.material = material;
+    }
+}
+
+impl Default for Sphere {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
