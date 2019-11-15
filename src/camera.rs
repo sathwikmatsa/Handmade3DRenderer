@@ -61,7 +61,7 @@ impl Camera {
         let pb = ProgressBar::new(n_pixels);
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("[{elapsed_precise}] {bar:70} {pos:>7}/{len:7} {msg} {eta}"),
+                .template("[{elapsed}] {bar:30} {pos:>7}/{len:7} {msg}ETA:{eta}"),
         );
 
         canvas

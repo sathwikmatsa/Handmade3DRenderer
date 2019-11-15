@@ -9,47 +9,23 @@ fn main() {
         Color::new(1.0, 1.0, 1.0),
     ));
 
-    let mut middle_sphere = Sphere::new();
-    middle_sphere.transform = Matrix::translation(-0.5, 1.0, 0.5);
-    middle_sphere.material.color = Color::new(0.1, 1.0, 0.5);
-    middle_sphere.material.diffuse = 0.7;
-    middle_sphere.material.specular = 0.3;
-    let mut ring_pattern = Pattern::ring(vec![WHITE, BLUE, RED, WHITE, RED]);
-    ring_pattern.transform = Matrix::scaling(0.2, 0.2, 0.2).rotate_x(std::f32::consts::PI / 2.0);
-    middle_sphere.material.pattern = Some(ring_pattern);
-
-    let mut left_sphere = Sphere::new();
-    left_sphere.transform =
-        Matrix::translation(-1.5, 0.33, -0.75) * &Matrix::scaling(0.33, 0.33, 0.33);
-    left_sphere.material.color = Color::new(1.0, 0.8, 0.1);
-    left_sphere.material.diffuse = 0.7;
-    left_sphere.material.specular = 0.3;
-    let mut stripe_pattern = Pattern::stripe(vec![YELLOW, GREEN]);
-    stripe_pattern.transform = Matrix::scaling(0.2, 0.2, 0.2);
-    left_sphere.material.pattern = Some(stripe_pattern);
-
-    let mut right_sphere = Sphere::new();
-    right_sphere.transform = Matrix::translation(1.5, 0.5, -0.5) * &Matrix::scaling(0.5, 0.5, 0.5);
-    right_sphere.material.color = Color::new(0.5, 1.0, 0.1);
-    right_sphere.material.diffuse = 0.7;
-    right_sphere.material.specular = 0.3;
-    right_sphere.material.pattern = Some(Pattern::checkers(vec![WHITE, BLACK]));
+    let mut sphere = Sphere::new();
+    sphere.transform = Matrix::translation(-0.5, 1.0, 0.5);
+    sphere.material.color = Color::new(1.0, 0.0, 0.0);
+    sphere.material.diffuse = 0.7;
+    sphere.material.specular = 0.3;
 
     let mut plane = Plane::new();
-    plane.material.pattern = Some(Pattern::gradient(vec![ORANGE, BLUE]));
+    plane.material.reflective = 0.7;
+    plane.material.pattern = Some(Pattern::checkers(vec![
+        Color::new(0.41, 0.41, 0.41),
+        Color::new(0.82, 0.82, 0.82),
+    ]));
 
     world.objects.insert(plane.get_id(), Box::new(plane));
-    world
-        .objects
-        .insert(left_sphere.get_id(), Box::new(left_sphere));
-    world
-        .objects
-        .insert(middle_sphere.get_id(), Box::new(middle_sphere));
-    world
-        .objects
-        .insert(right_sphere.get_id(), Box::new(right_sphere));
+    world.objects.insert(sphere.get_id(), Box::new(sphere));
 
-    let mut camera = Camera::new(100 * 5, 50 * 5, std::f32::consts::PI / 3.0);
+    let mut camera = Camera::new(70 * 10, 50 * 10, std::f32::consts::PI / 3.0);
     camera.transform = Matrix::view_transformation(
         Vec3::point(0.0, 1.5, -5.0),
         Vec3::point(0, 1, 0),

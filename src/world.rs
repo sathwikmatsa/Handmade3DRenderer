@@ -9,6 +9,8 @@ use super::sphere::Sphere;
 use super::vec3::Vec3;
 use std::collections::HashMap;
 
+pub const MAX_RECURSION_DEPTH: usize = 5;
+
 #[derive(Default)]
 pub struct World {
     pub objects: HashMap<usize, Box<dyn Object>>,
@@ -53,6 +55,9 @@ impl World {
         intersections
     }
     pub fn shade_hit(&self, state: &State) -> Color {
+        self.shade_hit_limit(state, MAX_RECURSION_DEPTH)
+    }
+    fn shade_hit_limit(&self, state: &State, remaining: usize) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
         for (light_index, light) in self.lights.iter().enumerate() {
             let in_shadow = self.is_shadowed(state.over_point, light_index);
@@ -64,15 +69,18 @@ impl World {
                     *light,
                     in_shadow,
                 );
-            color = color + self.reflected_color(&state)
+            color = color + self.reflected_color_limit(&state, remaining);
         }
         color
     }
     pub fn color_at(&self, ray: &Ray) -> Color {
+        self.color_at_limit(ray, MAX_RECURSION_DEPTH)
+    }
+    fn color_at_limit(&self, ray: &Ray, remaining: usize) -> Color {
         let xs = self.intersect_with(&ray);
         if let Some(x) = xs.hit() {
             let state = x.compute_state(&ray, self);
-            self.shade_hit(&state)
+            self.shade_hit_limit(&state, remaining)
         } else {
             Color::new(0.0, 0.0, 0.0)
         }
@@ -93,17 +101,20 @@ impl World {
         false
     }
     pub fn reflected_color(&self, state: &State) -> Color {
+        self.reflected_color_limit(state, MAX_RECURSION_DEPTH)
+    }
+    fn reflected_color_limit(&self, state: &State, remaining: usize) -> Color {
         let reflectivity = self
             .objects
             .get(&state.obj_id)
             .unwrap()
             .material()
             .reflective;
-        if float_cmp::equal(reflectivity, 0.0) {
+        if float_cmp::equal(reflectivity, 0.0) || remaining < 1 {
             Color::new(0.0, 0.0, 0.0)
         } else {
             let reflected_ray = Ray::new(state.over_point, state.reflectv);
-            let color = self.color_at(&reflected_ray);
+            let color = self.color_at_limit(&reflected_ray, remaining - 1);
 
             color * reflectivity
         }
@@ -286,5 +297,42 @@ pub mod tests {
         let comps = xs.compute_state(&ray, &world);
         let color = world.shade_hit(&comps);
         assert_eq!(color, Color::new(0.87701464, 0.92466193, 0.8293674));
+    }
+    #[test]
+    fn avoid_infinite_recursion() {
+        let mut world = World::new();
+        world
+            .lights
+            .push(Light::new(Vec3::point(0, 0, 0), Color::new(1.0, 1.0, 1.0)));
+        let mut lower = Plane::new();
+        lower.material.reflective = 1.0;
+        lower.transform = Matrix::translation(0.0, -1.0, 0.0);
+        let lower_id = lower.get_id();
+        world.objects.insert(lower_id, Box::new(lower));
+        let mut upper = Plane::new();
+        upper.material.reflective = 1.0;
+        upper.transform = Matrix::translation(0.0, 1.0, 0.0);
+        let upper_id = upper.get_id();
+        world.objects.insert(upper_id, Box::new(upper));
+        let ray = Ray::new(Vec3::point(0, 0, 0), Vec3::vector(0, 1, 0));
+        let _color = world.color_at(&ray);
+        assert!(true);
+    }
+    #[test]
+    fn limit_recursion() {
+        let mut world = World::default();
+        let mut shape = Plane::new();
+        shape.material.reflective = 0.5;
+        shape.transform = Matrix::translation(0.0, -1.0, 0.0);
+        let shape_id = shape.get_id();
+        world.objects.insert(shape_id, Box::new(shape));
+        let ray = Ray::new(
+            Vec3::point(0, 0, -3),
+            Vec3::vector(0.0, -INVSQRT2, INVSQRT2),
+        );
+        let xs = Intersection::new(SQRT2, shape_id);
+        let comps = xs.compute_state(&ray, &world);
+        let color = world.reflected_color_limit(&comps, 0);
+        assert_eq!(color, Color::new(0., 0., 0.));
     }
 }
