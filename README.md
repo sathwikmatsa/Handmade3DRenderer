@@ -49,3 +49,9 @@ A simple 3D renderer implemented in Rust using Whitted ray tracing technique. [W
 
 
 ![patterns](https://user-images.githubusercontent.com/30603669/65815626-8ed19f00-e20f-11e9-807e-0c115e8c8a9b.png)
+
+
+- Reflection
+
+
+![reflection](https://user-images.githubusercontent.com/30603669/68926670-15d0db80-07ac-11ea-9f4e-c5ad76fd6436.png)
